@@ -31,11 +31,11 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
 		}
 
-		//autoRespondRoutes := api.Group("/auto_respond") // auto respond api group
-		//{
-		//	autoRespondRoutes.GET("/", controllers.GetAutoResponds(db)) // get all auto responds
-		//}
-		//
+		autoRespondRoutes := api.Group("/auto_respond") // auto respond api group
+		{
+			autoRespondRoutes.GET("/", controllers.GetAutoResponds(db)) // get all auto responds
+		}
+
 		//analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
 		//{
 		//	analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts

@@ -21,5 +21,10 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			exampleRoutes.DELETE("/:id", controllers.DeleteExample(db))      // update examples (bulk) by id
 			exampleRoutes.DELETE("/bulk", controllers.DeleteExampleBulk(db)) // update examples (bulk) by id
 		}
+
+		webRoutes := api.Group("/web") // web api group
+		{
+			webRoutes.GET("/pages/", controllers.GetWebPages(db)) // get all webpages
+		}
 	}
 }

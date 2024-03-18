@@ -54,5 +54,5 @@ func main() {
 	routes.SetupRoutes(router, db)
 
 	// Run the Gin server
-	router.Run(":4000")
+	router.Run(":4001")
 }

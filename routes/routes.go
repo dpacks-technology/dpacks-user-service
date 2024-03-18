@@ -51,14 +51,14 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
 		}
 
-		//templateRoutes := api.Group("/template") // template api group
-		//{
-		//	templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
-		//}
-		//
-		//visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
-		//{
-		//	visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
-		//}
+		templateRoutes := api.Group("/template") // template api group
+		{
+			templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
+		}
+
+		visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
+		{
+			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
+		}
 	}
 }

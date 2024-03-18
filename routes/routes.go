@@ -36,21 +36,21 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			autoRespondRoutes.GET("/", controllers.GetAutoResponds(db)) // get all auto responds
 		}
 
-		//analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
-		//{
-		//	analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
-		//}
-		//
-		//keyPairsRoutes := api.Group("/keypairs") // keypairs api group
-		//{
-		//	keyPairsRoutes.GET("/", controllers.GetKeyPairs(db)) // get all keypairs
-		//}
-		//
-		//subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
-		//{
-		//	subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
-		//}
-		//
+		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
+		{
+			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+		}
+
+		keyPairsRoutes := api.Group("/keypairs") // keypairs api group
+		{
+			keyPairsRoutes.GET("/", controllers.GetKeyPairs(db)) // get all keypairs
+		}
+
+		subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
+		{
+			subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
+		}
+
 		//templateRoutes := api.Group("/template") // template api group
 		//{
 		//	templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates

@@ -25,16 +25,16 @@ func GetAutoResponds(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into AutoRespond structs
-		var webpages []models.AutoRespond
+		var autoResponds []models.AutoRespond
 
 		for rows.Next() {
-			var webpage models.AutoRespond
-			if err := rows.Scan(&webpage.ID, &webpage.Message, &webpage.Trigger, &webpage.IsActive, &webpage.LastUpdated); err != nil {
+			var autoRespond models.AutoRespond
+			if err := rows.Scan(&autoRespond.ID, &autoRespond.Message, &autoRespond.Trigger, &autoRespond.IsActive, &autoRespond.LastUpdated); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			autoResponds = append(autoResponds, autoRespond)
 		}
 
 		//this runs only when loop didn't work
@@ -44,8 +44,8 @@ func GetAutoResponds(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
+		// Return all autoResponds as JSON
+		c.JSON(http.StatusOK, autoResponds)
 
 	}
 }

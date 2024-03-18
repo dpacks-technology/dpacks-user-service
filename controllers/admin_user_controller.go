@@ -25,16 +25,16 @@ func GetAdminUsers(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into AdminUserModel structs
-		var webpages []models.AdminUserModel
+		var adminUsers []models.AdminUserModel
 
 		for rows.Next() {
-			var webpage models.AdminUserModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.Phone, &webpage.Email, &webpage.Password); err != nil {
+			var adminUser models.AdminUserModel
+			if err := rows.Scan(&adminUser.ID, &adminUser.Name, &adminUser.Phone, &adminUser.Email, &adminUser.Password); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			adminUsers = append(adminUsers, adminUser)
 		}
 
 		//this runs only when loop didn't work
@@ -44,8 +44,8 @@ func GetAdminUsers(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
+		// Return all adminUsers as JSON
+		c.JSON(http.StatusOK, adminUsers)
 
 	}
 }

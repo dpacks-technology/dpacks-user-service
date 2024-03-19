@@ -23,6 +23,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		webRoutes := api.Group("/web") // web api group
 		{
 			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db)) // get all webpages
+			webRoutes.GET("/webpages/count", controllers.GetWebPagesCount(db))   // get all webpages count
 		}
 
 		adminUserRoutes := api.Group("/admin_user") // admin user api group

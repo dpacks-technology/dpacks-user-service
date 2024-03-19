@@ -71,3 +71,15 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
+
+func GetWebPagesCount(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var count int
+		err := db.QueryRow("SELECT COUNT(*) FROM webpages").Scan(&count)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+		// Return all webpages as JSON
+		c.JSON(http.StatusOK, count)
+	}
+}

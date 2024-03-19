@@ -1,8 +1,7 @@
 package models
 
 // UserAlerts struct is a row record of the UserAlerts table in the postgres database
-type UserAlerts struct {
-	AlertID            int    `json:"alert_id"`
+type CreateNewAlert struct {
 	UserID             int    `json:"user_id"`
 	UserEmail          string `json:"user_email"`
 	AlertThreshold     int    `json:"alert_threshold"`

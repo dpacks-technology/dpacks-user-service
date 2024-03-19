@@ -36,9 +36,9 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 			autoRespondRoutes.GET("/", controllers.GetAutoResponds(db)) // get all auto responds
 		}
 
-		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
+		analyticalAlertsRoutes := api.Group("/Analytics") // analytical alerts api group
 		{
-			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+			analyticalAlertsRoutes.GET("/", controllers.CreateAlert(db)) // get all analytical alerts
 		}
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group

@@ -8,44 +8,68 @@ import (
 	"net/http"
 )
 
-// GetAnalyticalAlerts function
-func GetAnalyticalAlerts(db *sql.DB) gin.HandlerFunc {
+//// GetAnalyticalAlerts function
+//func GetAnalyticalAlerts(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//
+//		// Query the database for all records
+//		rows, err := db.Query("SELECT * FROM useralerts")
+//
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
+//			return
+//		}
+//
+//		//close the rows when the surrounding function returns(handler function)
+//		defer rows.Close()
+//
+//		// Iterate over the rows and scan them into UserAlerts structs
+//		var userAlerts []models.UserAlerts
+//
+//		for rows.Next() {
+//			var userAlert models.UserAlerts
+//			if err := rows.Scan(&userAlert.AlertID, &userAlert.UserID, &userAlert.UserEmail, &userAlert.AlertThreshold, &userAlert.AlertSubject, &userAlert.AlertContent, &userAlert.WhenAlertRequired, &userAlert.ReminderOption, &userAlert.CustomReminderDate); err != nil {
+//				fmt.Printf("%s\n", err)
+//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+//				return
+//			}
+//			userAlerts = append(userAlerts, userAlert)
+//		}
+//
+//		//this runs only when loop didn't work
+//		if err := rows.Err(); err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+//			return
+//		}
+//
+//		// Return all userAlerts as JSON
+//		c.JSON(http.StatusOK, userAlerts)
+//
+//	}
+//}
+
+// create  new alert
+func CreateAlert(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Query the database for all records
-		rows, err := db.Query("SELECT * FROM useralerts")
+		var createAlert models.CreateNewAlert
 
+		if err := c.BindJSON(&createAlert); err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error binding JSON"})
+			return
+		}
+
+		_, err := db.Exec("INSERT INTO useralerts (userid,useremail,alertthreshold,alertsubject,alertcontent,whenalertrequired,reminderoption) VALUES ($1, $2, $3, $4, $5, $6, $7)", createAlert.UserID, createAlert.UserEmail, createAlert.AlertThreshold, createAlert.AlertSubject, createAlert.AlertContent, createAlert.WhenAlertRequired, createAlert.ReminderOption)
 		if err != nil {
 			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
 			return
 		}
-
-		//close the rows when the surrounding function returns(handler function)
-		defer rows.Close()
-
-		// Iterate over the rows and scan them into UserAlerts structs
-		var userAlerts []models.UserAlerts
-
-		for rows.Next() {
-			var userAlert models.UserAlerts
-			if err := rows.Scan(&userAlert.AlertID, &userAlert.UserID, &userAlert.UserEmail, &userAlert.AlertThreshold, &userAlert.AlertSubject, &userAlert.AlertContent, &userAlert.WhenAlertRequired, &userAlert.ReminderOption, &userAlert.CustomReminderDate); err != nil {
-				fmt.Printf("%s\n", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
-				return
-			}
-			userAlerts = append(userAlerts, userAlert)
-		}
-
-		//this runs only when loop didn't work
-		if err := rows.Err(); err != nil {
-			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
-			return
-		}
-
-		// Return all userAlerts as JSON
-		c.JSON(http.StatusOK, userAlerts)
+		// Return the example as JSON
+		c.JSON(http.StatusOK, createAlert)
 
 	}
 }

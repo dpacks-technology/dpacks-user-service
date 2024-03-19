@@ -11,3 +11,11 @@ type CreateNewAlert struct {
 	ReminderOption     string `json:"reminder_option"`
 	CustomReminderDate string `json:"custom_reminder_date"`
 }
+type AlertList struct {
+	AlertThreshold     int    `json:"alert_threshold"`
+	AlertSubject       string `json:"alert_subject"`
+	AlertContent       string `json:"alert_content"`
+	WhenAlertRequired  string `json:"when_alert_required"`
+	ReminderOption     string `json:"reminder_option"`
+	CustomReminderDate string `json:"custom_reminder_date"`
+}

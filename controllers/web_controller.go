@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,22 +25,57 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 		pageInt, err := strconv.Atoi(page)
 		if err != nil {
 			// Handle error
+			fmt.Printf("%s\n", err)
+			return
 		}
 
 		countInt, err := strconv.Atoi(count)
 		if err != nil {
 			// Handle error
+			fmt.Printf("%s\n", err)
+			return
 		}
+
+		// get query parameters
+		key := c.Query("key")
+		val := c.Query("val")
+		escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 
 		// Calculate offset
 		offset := (pageInt - 1) * countInt
 
-		// Query the database for records based on pagination
-		rows, err := db.Query("SELECT * FROM webpages LIMIT $1 OFFSET $2", countInt, offset)
+		var args []interface{}
 
+		// Query the database for records based on pagination
+		query := "SELECT * FROM webpages ORDER BY id LIMIT $1 OFFSET $2"
+		args = append(args, countInt, offset)
+
+		if val != "" && key != "" {
+			switch key {
+			case "id":
+				query = "SELECT * FROM webpages WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, val)
+			case "name":
+				query = "SELECT * FROM webpages WHERE name LIKE $3 ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			case "path":
+				query = "SELECT * FROM webpages WHERE path LIKE $3 ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			}
+		}
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
 		if err != nil {
 			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
+			return
+		}
+		defer stmt.Close()
+
+		// Execute the prepared statement with bound parameters
+		rows, err := stmt.Query(args...)
+		if err != nil {
+			fmt.Printf("%s\n", err)
 			return
 		}
 
@@ -74,12 +110,52 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 
 func GetWebPagesCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		var count int
-		err := db.QueryRow("SELECT COUNT(*) FROM webpages").Scan(&count)
+
+		// get query parameters
+		key := c.Query("key")
+		val := c.Query("val")
+		escapedVal := strings.ReplaceAll(val, "_", "\\_") + "%"
+
+		var args []interface{}
+
+		// Query the database for records based on pagination
+		query := "SELECT COUNT(*) FROM webpages"
+
+		if val != "" && key != "" {
+			switch key {
+			case "id":
+				query = "SELECT COUNT(*) FROM webpages WHERE id = $1"
+				args = append(args, val)
+			case "name":
+				query = "SELECT COUNT(*) FROM webpages WHERE name LIKE $1"
+				args = append(args, escapedVal)
+			case "path":
+				query = "SELECT COUNT(*) FROM webpages WHERE path LIKE $1"
+				args = append(args, escapedVal)
+			}
+		}
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			return
 		}
+
+		// Execute the prepared statement with bound parameters
+		err = stmt.QueryRow(args...).Scan(&count)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Close the statement
+		defer stmt.Close()
+
 		// Return all webpages as JSON
 		c.JSON(http.StatusOK, count)
+
 	}
 }

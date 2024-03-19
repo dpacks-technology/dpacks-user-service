@@ -38,10 +38,11 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 
 		analyticalAlertsRoutes := api.Group("/Analytics") // analytical alerts api group
 		{
-			analyticalAlertsRoutes.GET("/", controllers.CreateAlert(db))       // create new alert
-			analyticalAlertsRoutes.PUT("/:id", controllers.UpdateAlert(db))    // update alert
-			analyticalAlertsRoutes.DELETE("/:id", controllers.DeleteAlert(db)) // delete alert
-			analyticalAlertsRoutes.GET("/:id", controllers.GetAlertList(db))   // get all analytical alerts
+			analyticalAlertsRoutes.GET("/", controllers.CreateAlert(db))              // create new alert
+			analyticalAlertsRoutes.PUT("/:id", controllers.UpdateAlert(db))           // update alert
+			analyticalAlertsRoutes.DELETE("/:id", controllers.DeleteAlert(db))        // delete alert
+			analyticalAlertsRoutes.GET("/:id", controllers.GetAlertList(db))          // get all analytical alerts
+			analyticalAlertsRoutes.GET("/Dashboad", controllers.GetDashboardData(db)) // get all analytical alerts
 		}
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group

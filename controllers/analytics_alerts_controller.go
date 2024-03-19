@@ -138,7 +138,41 @@ func GetAlertList(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
-		var alertList models.AlertList
+		rows, err := db.Query("SELECT alertthreshold,alertsubject,alertcontent,whenalertrequired,reminderoption,customreminderdate FROM useralerts WHERE userid = $1", id)
+
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
+			return
+		}
+		defer rows.Close()
+
+		var alertList []models.AlertList
+
+		for rows.Next() {
+			var alert models.AlertList
+			if err := rows.Scan(&alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.ReminderOption, &alert.CustomReminderDate); err != nil {
+				fmt.Printf("%s\n", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+				return
+			}
+			alertList = append(alertList, alert)
+
+		}
+		//this runs only when loop didn't work
+		if err := rows.Err(); err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+			return
+		}
+
+		// Return all examples as JSON
+		c.JSON(http.StatusOK, alertList)
+
 	}
 
+}
+
+func GetDashboardData(db *sql.DB) gin.HandlerFunc {
+	
 }

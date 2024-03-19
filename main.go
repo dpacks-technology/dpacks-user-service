@@ -51,8 +51,12 @@ func main() {
 	router.Use(cors.New(config))
 
 	// router
-	routes.SetupRoutes(router, db)
+	routes.SetupRoutesFunc(router, db)
 
 	// Run the Gin server
-	router.Run(":4001")
+	err = router.Run(":4001")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }

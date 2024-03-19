@@ -5,6 +5,7 @@ import (
 	"dpacks-go-services-template/models"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,8 +14,28 @@ import (
 func GetWebPages(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Query the database for all records
-		rows, err := db.Query("SELECT * FROM webpages")
+		// get page id parameter
+		page := c.Param("page")
+
+		// get count parameter
+		count := c.Param("count")
+
+		// Convert page and count to integers
+		pageInt, err := strconv.Atoi(page)
+		if err != nil {
+			// Handle error
+		}
+
+		countInt, err := strconv.Atoi(count)
+		if err != nil {
+			// Handle error
+		}
+
+		// Calculate offset
+		offset := (pageInt - 1) * countInt
+
+		// Query the database for records based on pagination
+		rows, err := db.Query("SELECT * FROM webpages LIMIT $1 OFFSET $2", countInt, offset)
 
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -30,7 +51,7 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var webpage models.WebpageModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path); err != nil {
+			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

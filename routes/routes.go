@@ -6,8 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes configures all routes for the application
-func SetupRoutes(r *gin.Engine, db *sql.DB) {
+func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 	api := r.Group("/api")
 	{
 		exampleRoutes := api.Group("/example") // example api group
@@ -23,7 +22,7 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 
 		webRoutes := api.Group("/web") // web api group
 		{
-			webRoutes.GET("/pages/", controllers.GetWebPages(db)) // get all webpages
+			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db)) // get all webpages
 		}
 
 		adminUserRoutes := api.Group("/admin_user") // admin user api group

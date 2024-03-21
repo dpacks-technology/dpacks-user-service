@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/validators"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -104,6 +105,33 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 
 		// Return all webpages as JSON
 		c.JSON(http.StatusOK, webpages)
+
+	}
+}
+
+// GetWebPageById handles GET /api/web/webpages/:id - READ
+func GetWebPageById(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// Query the database for a single record
+		row := db.QueryRow("SELECT * FROM webpages WHERE id = $1", id)
+
+		// Create a WebpageModel to hold the data
+		var webpage models.WebpageModel
+
+		// Scan the row data into the WebpageModel
+		err := row.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+			return
+		}
+
+		// Return the webpage as JSON
+		c.JSON(http.StatusOK, webpage)
 
 	}
 }
@@ -497,6 +525,186 @@ func GetWebPagesCount(db *sql.DB) gin.HandlerFunc {
 
 		// Return all webpages as JSON
 		c.JSON(http.StatusOK, count)
+
+	}
+}
+
+// EditWebPage handles PUT /api/web/webpages/:id - UPDATE
+func EditWebPage(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// get the JSON data - only the name
+		var webpage models.WebpageModel
+		if err := c.ShouldBindJSON(&webpage); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Validate the webpage data
+		if err := validators.ValidateName(webpage, false); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Update the webpage in the database
+		_, err := db.Exec("UPDATE webpages SET name = $1 WHERE id = $2", webpage.Name, id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+
+	}
+}
+
+// DeleteWebPageByID handles DELETE /api/web/webpages/:id - DELETE
+func DeleteWebPageByID(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// query to delete the webpage
+		query := "DELETE FROM webpages WHERE id = $1"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage deleted successfully"})
+
+	}
+}
+
+// DeleteWebPageByIDBulk handles DELETE /api/web/webpages/bulk/:id - DELETE
+func DeleteWebPageByIDBulk(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get ids array as a parameter as integer
+		id := c.Param("id")
+
+		// Convert the string of ids to an array of ids
+		ids := strings.Split(id, ",")
+
+		// Delete the webpage from the database
+		for _, id := range ids {
+			// query to delete the webpage
+			query := "DELETE FROM webpages WHERE id = $1"
+
+			// Prepare the statement
+			stmt, err := db.Prepare(query)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+			// Execute the prepared statement with bound parameters
+			_, err = stmt.Exec(id)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
+
+	}
+}
+
+// UpdateWebPageStatusBulk handles PUT /api/web/webpages/status/bulk/:id - UPDATE
+func UpdateWebPageStatusBulk(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// Convert the string of ids to an array of ids
+		ids := strings.Split(id, ",")
+
+		// get the JSON data - only the status
+		var webpage models.WebpageModel
+		if err := c.ShouldBindJSON(&webpage); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Update the webpage status in the database
+		for _, id := range ids {
+
+			query := "UPDATE webpages SET status = $1 WHERE id = $2"
+
+			// Prepare the statement
+			stmt, err := db.Prepare(query)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+			// Execute the prepared statement with bound parameters
+			_, err = stmt.Exec(webpage.Status, id)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+
+	}
+}
+
+// UpdateWebPageStatus handles PUT /api/web/webpages/status/:id - UPDATE
+func UpdateWebPageStatus(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// get the JSON data - only the status
+		var webpage models.WebpageModel
+		if err := c.ShouldBindJSON(&webpage); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// query to update the webpage status
+		query := "UPDATE webpages SET status = $1 WHERE id = $2"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(webpage.Status, id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
 
 	}
 }

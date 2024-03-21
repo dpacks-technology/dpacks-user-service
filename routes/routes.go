@@ -22,6 +22,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		webRoutes := api.Group("/web") // web api group
 		{
+			webRoutes.POST("/webpage", controllers.AddWebPage(db)) // add webpage
+
 			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db))                    // get all webpages
 			webRoutes.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
 			webRoutes.GET("/webpages/status/:count/:page", controllers.GetWebPagesByStatus(db))     // get all webpages by status

@@ -22,7 +22,22 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		webRoutes := api.Group("/web") // web api group
 		{
-			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db)) // get all webpages
+			webRoutes.POST("/webpage", controllers.AddWebPage(db)) // add webpage
+
+			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db))                    // get all webpages
+			webRoutes.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
+			webRoutes.GET("/webpages/status/:count/:page", controllers.GetWebPagesByStatus(db))     // get all webpages by status
+			webRoutes.GET("/webpages/status/count", controllers.GetWebPagesByStatusCount(db))       // get all webpages by status
+			webRoutes.GET("/webpages/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
+			webRoutes.GET("/webpages/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
+			webRoutes.GET("/webpages/count", controllers.GetWebPagesCount(db))                      // get all webpages count
+
+			webRoutes.PUT("/webpages/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
+			webRoutes.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
+			webRoutes.PUT("/webpages/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+
+			webRoutes.DELETE("/webpages/:id", controllers.DeleteWebPageByID(db))          // delete webpage by ID
+			webRoutes.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
 		adminUserRoutes := api.Group("/admin_user") // admin user api group

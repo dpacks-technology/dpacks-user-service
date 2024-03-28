@@ -43,7 +43,11 @@ func SetupRoutes(r *gin.Engine, db *sql.DB) {
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group
 		{
-			keyPairsRoutes.GET("/", controllers.GetKeyPairs(db)) // get all keypairs
+			keyPairsRoutes.GET("/", controllers.GetKeyPairs(db))         // get all keypairs
+			keyPairsRoutes.GET("/:id", controllers.GetKeyPairsID(db))    // get keypair for the given user id
+			keyPairsRoutes.POST("/:id", controllers.AddKeyPair(db))      // add keypair for the given user id
+			keyPairsRoutes.PUT("/:id", controllers.UpdateKeyPair(db))    // update keypair for the given user id
+			keyPairsRoutes.DELETE("/:id", controllers.DeleteKeyPair(db)) // delete keypair for the given user id
 		}
 
 		subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group

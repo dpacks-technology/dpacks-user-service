@@ -8,7 +8,8 @@ import (
 )
 
 var limits = map[string]int{
-	"/api/webcontent/webcontents": 5, // Allow 5 requests per minute for /api/webcontent/webcontents
+	"/api/webcontent/webcontents":         5, // Allow 5 requests per minute for /api/webcontent/webcontents
+	"/api/webcontent/webcontents/updated": 6,
 }
 
 func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
@@ -87,7 +88,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		webContentRoutes := api.Group("/webcontent")
 		//webContentRoutes.Use(rateLimiter.Limit())// visitor user api group
 		{
-			webContentRoutes.GET("/webcontents", rateLimiter.Limit(), controllers.GetAllWebContents(db)) // get all visitor users
+			webContentRoutes.GET("/webcontents", rateLimiter.Limit(), controllers.GetAllWebContents(db)) // get all webcontent
+			webContentRoutes.GET("/webcontents/updated", rateLimiter.Limit(), controllers.GetUpdatedWebContents(db))
 		}
 	}
 }

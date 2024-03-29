@@ -14,3 +14,13 @@ func GetAllWebContents(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
+
+// GetUpdatedWebContents function
+func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// Return a message to display this endpoint is working
+		c.JSON(200, gin.H{"message": "GetUpdatedWebContents endpoint is working!!!!!!!!!!"})
+
+	}
+}

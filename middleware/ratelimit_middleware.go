@@ -23,6 +23,10 @@ func NewRateLimit(db *sql.DB) (*RateLimit, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Start a goroutine to periodically refresh the rate limits from the database
+	go rl.periodicRefresh()
+
 	return rl, nil
 }
 
@@ -92,4 +96,29 @@ func (rl *RateLimit) updateLimitsFromDatabase() error {
 	rl.mu.Unlock()
 
 	return nil
+}
+
+// Periodically refresh rate limits from the database
+// becouse when we update the rate limit in the database we need to update the rate limit in the instance we have in the memory
+// so we need to refresh the rate limit from the database
+func (rl *RateLimit) periodicRefresh() {
+	// Function to periodically refresh the rate limits from the database
+	// This function runs in a separate goroutine
+
+	// Define the refresh interval (e.g., every 30 seconds
+	refreshInterval := 2 * time.Minute
+
+	// Create a ticker to trigger refresh at regular intervals
+	ticker := time.NewTicker(refreshInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// Refresh rate limits from the database
+			if err := rl.updateLimitsFromDatabase(); err != nil {
+				
+			}
+		}
+	}
 }

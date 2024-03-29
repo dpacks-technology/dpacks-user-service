@@ -7,16 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var limits = map[string]int{
-	"/api/webcontent/webcontents":         5, // Allow 5 requests per minute for /api/webcontent/webcontents
-	"/api/webcontent/webcontents/updated": 6,
-}
-
 func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
-	api := r.Group("/api")
+	// Create a new rate limiter middleware
+	rateLimiter, err := middleware.NewRateLimit(db)
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
 
-	// Create a rate limiter instance
-	rateLimiter := middleware.NewRateLimit(limits)
+	api := r.Group("/api")
 
 	{
 		exampleRoutes := api.Group("/example") // example api group
@@ -86,10 +85,11 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		}
 
 		webContentRoutes := api.Group("/webcontent")
-		//webContentRoutes.Use(rateLimiter.Limit())// visitor user api group
+		//apply ratelimiter for webcontent subgrooup
+		webContentRoutes.Use(rateLimiter.Middleware())
 		{
-			webContentRoutes.GET("/webcontents", rateLimiter.Limit(), controllers.GetAllWebContents(db)) // get all webcontent
-			webContentRoutes.GET("/webcontents/updated", rateLimiter.Limit(), controllers.GetUpdatedWebContents(db))
+			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
+			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
 	}
 }

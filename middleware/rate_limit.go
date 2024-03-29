@@ -1,32 +1,57 @@
 package middleware
 
 import (
+	"database/sql"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 )
 
-type rateLimit struct {
-	limiters map[string]*rate.Limiter // Map endpoint paths to rate limiters
+type RateLimit struct {
+	mu       sync.Mutex
+	limiters map[string]*rate.Limiter
+	db       *sql.DB
 }
 
-func NewRateLimit(limits map[string]int) *rateLimit {
-	rl := &rateLimit{limiters: make(map[string]*rate.Limiter)}
-	for path, limit := range limits {
-		rl.limiters[path] = rate.NewLimiter(rate.Every(time.Minute), limit) // Adjust rate as needed
+func NewRateLimit(db *sql.DB) (*RateLimit, error) {
+	rl := &RateLimit{limiters: make(map[string]*rate.Limiter), db: db}
+	// Fetch initial limits from database on creation
+	err := rl.updateLimitsFromDatabase()
+	if err != nil {
+		return nil, err
 	}
-	return rl
+	return rl, nil
 }
 
-func (rl *rateLimit) Limit() gin.HandlerFunc {
+func (rl *RateLimit) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		path := c.Request.URL.Path
-		limiter, ok := rl.limiters[path]
-		if !ok {
-			// Handle cases where a path doesn't have a specific limit set
-			// You might choose to use a default limiter or allow the request
+		var path string
+		path = c.FullPath() // Use FullPath method to get the complete path
+
+		rl.mu.Lock()
+		limiter, found := rl.limiters[path]
+		rl.mu.Unlock()
+
+		if !found {
+			// Handle missing limit (fetch from database or use default)
+			if rl.db != nil {
+				err := rl.updateLimitsFromDatabase()
+				if err != nil {
+					// Log the error and proceed without rate limiting
+					c.Next()
+					return
+				}
+				rl.mu.Lock()
+				limiter, found = rl.limiters[path]
+				rl.mu.Unlock()
+			}
+		}
+
+		if !found {
+			// No limit found in database (handle accordingly)
 			c.Next()
 			return
 		}
@@ -41,4 +66,30 @@ func (rl *rateLimit) Limit() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func (rl *RateLimit) updateLimitsFromDatabase() error {
+	rows, err := rl.db.Query("SELECT path, ratelimit FROM endpoint_ratelimits")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	limits := make(map[string]*rate.Limiter)
+	for rows.Next() {
+		var path string
+		var limit int
+		err := rows.Scan(&path, &limit)
+		if err != nil {
+			return err
+		}
+		limits[path] = rate.NewLimiter(rate.Every(time.Minute), limit) // Adjust rate as needed
+	}
+
+	// Update the rate limiters map
+	rl.mu.Lock()
+	rl.limiters = limits
+	rl.mu.Unlock()
+
+	return nil
 }

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"database/sql"
+	"dpacks-go-services-template/models"
 	"net/http"
 	"sync"
 	"time"
@@ -40,21 +41,6 @@ func (rl *RateLimit) Limit() gin.HandlerFunc {
 		rl.mu.Unlock()
 
 		if !found {
-			// Handle missing limit (fetch from database or use default)
-			if rl.db != nil {
-				err := rl.updateLimitsFromDatabase()
-				if err != nil {
-					// Log the error and proceed without rate limiting
-					c.Next()
-					return
-				}
-				rl.mu.Lock()
-				limiter, found = rl.limiters[path]
-				rl.mu.Unlock()
-			}
-		}
-
-		if !found {
 			// No limit found in database (handle accordingly)
 			c.Next()
 			return
@@ -81,13 +67,15 @@ func (rl *RateLimit) updateLimitsFromDatabase() error {
 
 	limits := make(map[string]*rate.Limiter)
 	for rows.Next() {
-		var path string
-		var limit int
-		err := rows.Scan(&path, &limit)
+
+		//using model
+		var limitModel models.EndpointRateLimit
+
+		err := rows.Scan(&limitModel.Path, &limitModel.Limit)
 		if err != nil {
 			return err
 		}
-		limits[path] = rate.NewLimiter(rate.Every(time.Minute), limit) // Adjust rate as needed
+		limits[limitModel.Path] = rate.NewLimiter(rate.Every(time.Minute), limitModel.Limit) // Adjust rate as needed
 	}
 
 	// Update the rate limiters map
@@ -117,7 +105,7 @@ func (rl *RateLimit) periodicRefresh() {
 		case <-ticker.C:
 			// Refresh rate limits from the database
 			if err := rl.updateLimitsFromDatabase(); err != nil {
-				
+
 			}
 		}
 	}

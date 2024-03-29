@@ -45,9 +45,24 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
 		}
 
-		autoRespondRoutes := api.Group("/auto_respond") // auto respond api group
+		autoRespondRoutes := api.Group("/respond") // auto respond api group
 		{
-			autoRespondRoutes.GET("/", controllers.GetAutoResponds(db)) // get all auto responds
+			autoRespondRoutes.POST("/auto_respond", controllers.AddAutomatedMessage(db)) // add webpage
+
+			autoRespondRoutes.GET("/auto_respond/:count/:page", controllers.GetAutomatedMessage(db)) // get all webpages
+			//autoRespondRoutes.GET("/auto_respond/:id", controllers.GetAutomatedMessageById(db))                         // get a webpage by id
+			//autoRespondRoutes.GET("/auto_respond/status/:count/:page", controllers.GetAutomatedMessageByStatus(db))     // get all webpages by status
+			//autoRespondRoutes.GET("/auto_respond/status/count", controllers.GetAutomatedMessageStatusCount(db))         // get all webpages by status
+			//autoRespondRoutes.GET("/auto_respond/datetime/:count/:page", controllers.GetAutomatedMessageByDatetime(db)) // get all webpages by datetime
+			//autoRespondRoutes.GET("/auto_respond/datetime/count", controllers.GetAutomatedMessageByDatetimeCount(db))   // get all webpages by datetime
+			//autoRespondRoutes.GET("/auto_respond/count", controllers.GetAutomatedMessageCount(db))                      // get all webpages count
+
+			//autoRespondRoutes.PUT("/auto_respond/status/:id", controllers.UpdateAutomatedMessageStatus(db))          // update webpage status by id
+			//autoRespondRoutes.PUT("/auto_respond/:id", controllers.EditAutomatedMessage(db))                         // edit webpage by id
+			//autoRespondRoutes.PUT("/auto_respond/status/bulk/:id", controllers.UpdateAutomatedMessageStatusBulk(db)) // update webpage status by id (bulk)
+			//
+			//autoRespondRoutes.DELETE("/auto_respond/:id", controllers.DeleteAutomatedMessageByID(db))          // delete webpage by ID
+			//autoRespondRoutes.DELETE("/auto_respond/bulk/:id", controllers.DeleteAutomatedMessageByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
 		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group

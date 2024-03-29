@@ -26,7 +26,7 @@ func NewRateLimit(db *sql.DB) (*RateLimit, error) {
 	return rl, nil
 }
 
-func (rl *RateLimit) Middleware() gin.HandlerFunc {
+func (rl *RateLimit) Limit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var path string
 		path = c.FullPath() // Use FullPath method to get the complete path

@@ -86,8 +86,10 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		webContentRoutes := api.Group("/webcontent")
 		//apply ratelimiter for webcontent subgrooup
-		webContentRoutes.Use(rateLimiter.Middleware())
+		webContentRoutes.Use(rateLimiter.Limit()) //this also possible
+		webContentRoutes.Use(middleware.AuthMiddleware(db))
 		{
+			//or this also possible
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}

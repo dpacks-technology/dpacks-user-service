@@ -15,14 +15,25 @@ func GetKeyPairs(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Query the database for all records
-		rows, err := db.Query("SELECT * FROM keypairs")
+		query := "SELECT * FROM keypairs"
 
+		//prepare statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing the query"})
+			return
+		}
+		//close the statement when the surrounding function returns(handler function)
+		defer stmt.Close()
+
+		//execute the statement
+		rows, err := stmt.Query()
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
 			return
 		}
-
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
@@ -61,14 +72,38 @@ func GetKeyPairsID(db *sql.DB) gin.HandlerFunc {
 		// Create an empty ExampleModel struct
 		var keypair models.KeyPairs
 
-		// Query the database for the record with the given ID
-		row := db.QueryRow("SELECT * FROM keypairs WHERE user_id = $1", id)
+		//query the database for the record with the given ID
+		query := "SELECT * FROM keypairs WHERE user_id = $1"
 
-		// Scan the row into the ExampleModel struct
-		if err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key); err != nil {
+		//prepare statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing the query"})
+			return
+		}
+
+		//close the statement when the surrounding function returns(handler function)
+		defer stmt.Close()
+
+		//execute the statement
+		row, err := stmt.Query(id)
+		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
 			return
+		}
+
+		//close the rows when the surrounding function returns(handler function)
+		defer row.Close()
+
+		// Iterate over the rows and scan them into KeyPairs structs
+		for row.Next() {
+			if err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key); err != nil {
+				fmt.Printf("%s\n", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+				return
+			}
 		}
 
 		// Return the example as JSON
@@ -95,7 +130,28 @@ func AddKeyPair(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Insert the record into the database
-		_, err := db.Exec("INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)", keypair.UserID, keypair.ClientID, keypair.Key)
+		//_, err := db.Exec("INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)", keypair.UserID, keypair.ClientID, keypair.Key)
+		//if err != nil {
+		//	fmt.Printf("%s\n", err)
+		//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
+		//	return
+		//}
+
+		//query to insert the record into the database
+		query := "INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)"
+
+		//prepare statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing the query"})
+			return
+		}
+		//close the statement when the surrounding function returns(handler function)
+		defer stmt.Close()
+
+		//execute the statement
+		_, err = stmt.Exec(keypair.UserID, keypair.ClientID, keypair.Key)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
@@ -124,12 +180,34 @@ func UpdateKeyPair(db *sql.DB) gin.HandlerFunc {
 			Key:      key,
 		}
 
-		_, err := db.Exec("UPDATE keypairs SET client_id = $1, key = $2 WHERE user_id=$3", keypair.ClientID, keypair.Key, userId)
+		//_, err := db.Exec("UPDATE keypairs SET client_id = $1, key = $2 WHERE user_id=$3", keypair.ClientID, keypair.Key, userId)
+		//if err != nil {
+		//	fmt.Printf("%s\n", err)
+		//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error in data Update"})
+		//	return
+		//}
+
+		//query to update the record in the database
+		query := "UPDATE keypairs SET client_id = $1, key = $2 WHERE user_id=$3"
+
+		//prepare statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing the query"})
+			return
+		}
+		//close the statement when the surrounding function returns(handler function)
+		defer stmt.Close()
+
+		//execute the statement
+		_, err = stmt.Exec(keypair.ClientID, keypair.Key, userId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error in data Update"})
 			return
 		}
+
 		// return statement
 		c.JSON(http.StatusOK, keypair)
 	}
@@ -141,18 +219,39 @@ func DeleteKeyPair(db *sql.DB) gin.HandlerFunc {
 		// Get the ID from the URL
 		id := c.Param("id")
 
-		result, err := db.Exec("DELETE FROM keypairs WHERE user_id = $1", id)
+		//result, err := db.Exec("DELETE FROM keypairs WHERE user_id = $1", id)
+		//if err != nil {
+		//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete examples"})
+		//	return
+		//}
+		//
+		//rowCount, err := result.RowsAffected()
+		//if err != nil {
+		//	log.Fatal(err)
+		//}
+		//
+		//fmt.Printf("Deleted %d rows\n", rowCount)
+
+		//query to delete the record from the database
+		query := "DELETE FROM keypairs WHERE user_id = $1"
+
+		//prepare statement
+		stmt, err := db.Prepare(query)
 		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing the query"})
+			return
+		}
+		//close the statement when the surrounding function returns(handler function)
+		defer stmt.Close()
+
+		//execute the statement
+		_, err = stmt.Exec(id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete examples"})
 			return
 		}
-
-		rowCount, err := result.RowsAffected()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Deleted %d rows\n", rowCount)
 		// return statement
 		c.JSON(http.StatusOK, gin.H{"message": "Example deleted successfully"})
 

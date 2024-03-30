@@ -65,9 +65,23 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
 		}
 
-		templateRoutes := api.Group("/template") // template api group
+		templateRoutes := api.Group("/marketplace") // marketplace api group
 		{
-			templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
+			templateRoutes.GET("/templates/:count/:page", controllers.GetTemplates(db)) // get all
+			//templateRoutes.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get by id
+			templateRoutes.GET("/templates/status/:count/:page", controllers.GetTemplatesByStatus(db))     // get all by status
+			templateRoutes.GET("/templates/status/count", controllers.GetTemplatesByStatusCount(db))       // get all by status
+			templateRoutes.GET("/templates/datetime/:count/:page", controllers.GetTemplatesByDatetime(db)) // get all by datetime
+			templateRoutes.GET("/templates/datetime/count", controllers.GetTemplatesByDatetimeCount(db))   // get all by datetime
+			templateRoutes.GET("/templates/count", controllers.GetTemplatesCount(db))                      // get all count
+
+			templateRoutes.PUT("/templates/status/:id", controllers.UpdateTemplatesStatus(db)) // update status by id
+			//templateRoutes.PUT("/templates/:id", controllers.EditWebPage(db))                         // edit by id
+			templateRoutes.PUT("/templates/status/bulk/:id", controllers.UpdateTemplatesStatusBulk(db)) // update status by id (bulk)
+
+			templateRoutes.DELETE("/templates/:id", controllers.DeleteTemplateByID(db))          // delete by ID
+			templateRoutes.DELETE("/templates/bulk/:id", controllers.DeleteTemplateByIDBulk(db)) // delete by ID (bulk)
+
 		}
 
 		visitorUserRoutes := api.Group("/visitor_user") // visitor user api group

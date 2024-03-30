@@ -74,5 +74,25 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
+
+		BillingRoutes := api.Group("/billing") // web api group
+		{
+			//webRoutes.POST("/webpage", controllers.AddWebPage(db)) // add webpage
+
+			BillingRoutes.GET("/transactions/:count/:page", controllers.GetTransactions(db))                 // get all transactions
+			BillingRoutes.GET("/transaction/:id", controllers.GetTansactionsById(db))                        // get a transactions by id
+			BillingRoutes.GET("/transactions/status/:count/:page", controllers.GetTransactionByStatus(db))   // get all transactions by status
+			BillingRoutes.GET("/transactions/status/count", controllers.GetTransactionByStatusCount(db))     // get all transactions by status
+			BillingRoutes.GET("/transactions/datetime/:count/:page", controllers.GetTransactionDateTime(db)) // get all transactions by datetime
+			BillingRoutes.GET("/transactions/datetime/count", controllers.GetTransactionByDatetimeCount(db)) // get all transactions by datetime
+			BillingRoutes.GET("/transactions/count", controllers.GetTransactionCount(db))                    // get all transactions count
+
+			BillingRoutes.PUT("/transactions/status/:id", controllers.UpdateTransactionStatus(db))          // update transactions status by id
+			BillingRoutes.PUT("/transactions/:id", controllers.EditTransaction(db))                         // edit transactions by id
+			BillingRoutes.PUT("/transactions/status/bulk/:id", controllers.UpdateTransactionStatusBulk(db)) // update transactions status by id (bulk)
+
+			BillingRoutes.DELETE("/transactions/:id", controllers.DeleteTransactionByID(db))          // delete transactions by ID
+			BillingRoutes.DELETE("/transactions/bulk/:id", controllers.DeleteTransactionByIDBulk(db)) // delete transactions by ID (bulk)
+		}
 	}
 }

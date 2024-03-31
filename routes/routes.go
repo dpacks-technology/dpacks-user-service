@@ -51,17 +51,15 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db)) // add webpage
 
 			apiSubscribersRoutes.GET("/subscribers/:count/:page", controllers.GetApiSubscribers(db))
-			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db))                     // get a webpage by id
-			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
-			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
-			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))                // get all webpages count
+			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db))                           // get a webpage by id
+			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetApiSubscribersByDatetime(db)) // get all webpages by datetime
+			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetApiSubscribersByDatetimeCount(db))   // get all webpages by datetime
+			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))                      // get all webpages count
 
-			//apiSubscribersRoutes.PUT("/webpages/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
-			//apiSubscribersRoutes.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
-			//apiSubscribersRoutes.PUT("/webpages/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+			apiSubscribersRoutes.PUT("/subscriber/:id", controllers.RegenerateKey(db)) // edit webpage by id
 
-			//apiSubscribersRoutes.DELETE("/webpages/:id", controllers.DeleteWebPageByID(db))          // delete webpage by ID
-			//apiSubscribersRoutes.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
+			apiSubscribersRoutes.DELETE("/subscriber/:id", controllers.DeleteApiSubscriberByID(db))          // delete webpage by ID
+			apiSubscribersRoutes.DELETE("/subscriber/bulk/:id", controllers.DeleteApiSubscriberByIDBulk(db)) // delete webpage by ID (bulk)
 
 		}
 

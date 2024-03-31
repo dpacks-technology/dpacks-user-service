@@ -56,9 +56,9 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			analyticalAlertsRoutes.GET("/visitorInfo/:count/:page", controllers.GetVisitorInfo(db)) // get all webpages
 			analyticalAlertsRoutes.GET("/webpage/:id", controllers.GetWebPageById(db))              // get a webpage by id
 
-			analyticalAlertsRoutes.GET("/webpages/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
-			analyticalAlertsRoutes.GET("/webpages/datetime/count", controllers.GetByDatetimeCount(db))              // get all webpages by datetime
-			analyticalAlertsRoutes.GET("/visitorInfo/count", controllers.GetVisitorInfoCount(db))                   // get all webpages count
+			analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
+			//analyticalAlertsRoutes.GET("/webpages/datetime/count", controllers.GetByDatetimeCount(db))              // get all webpages by datetime
+			analyticalAlertsRoutes.GET("/visitorInfo/count", controllers.GetVisitorInfoCount(db)) // get all webpages count
 
 			keyPairsRoutes := api.Group("/keypairs") // keypairs api group
 			{

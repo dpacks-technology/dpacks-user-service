@@ -42,7 +42,7 @@ func GetKeyPairs(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var keypair models.KeyPairs
-			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key); err != nil {
+			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreateOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -99,7 +99,7 @@ func GetKeyPairsID(db *sql.DB) gin.HandlerFunc {
 
 		// Iterate over the rows and scan them into KeyPairs structs
 		for row.Next() {
-			if err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key); err != nil {
+			if err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreateOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

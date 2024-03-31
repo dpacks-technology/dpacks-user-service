@@ -74,5 +74,26 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
+
+		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
+		{
+
+			//rateLimitRouts.POST("/webpage", controllers.AddWebPage(db)) // add webpage
+
+			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db)) // get all webpages
+			//rateLimitRouts.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
+			//rateLimitRouts.GET("/webpages/status/:count/:page", controllers.GetWebPagesByStatus(db))     // get all webpages by status
+			//rateLimitRouts.GET("/webpages/status/count", controllers.GetWebPagesByStatusCount(db))       // get all webpages by status
+			//rateLimitRouts.GET("/webpages/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
+			//rateLimitRouts.GET("/webpages/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
+			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db)) // get all webpages count
+
+			//rateLimitRouts.PUT("/webpages/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
+			//rateLimitRouts.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
+			//rateLimitRouts.PUT("/webpages/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+			//
+			//rateLimitRouts.DELETE("/webpages/:id", controllers.DeleteWebPageByID(db))          // delete webpage by ID
+			//rateLimitRouts.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
+		}
 	}
 }

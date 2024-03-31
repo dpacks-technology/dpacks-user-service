@@ -54,7 +54,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 
 			analyticalAlertsRoutes.GET("/visitorInfo/:count/:page", controllers.GetVisitorInfo(db)) // get all webpages
-			analyticalAlertsRoutes.GET("/webpage/:id", controllers.GetWebPageById(db))              // get a webpage by id
+			analyticalAlertsRoutes.GET("/visitorInfo/:id", controllers.GetWebPageById(db))          // get a webpage by id
 
 			analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
 			analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime

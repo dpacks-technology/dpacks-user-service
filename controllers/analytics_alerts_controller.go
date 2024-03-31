@@ -159,105 +159,105 @@ func GetVisitorInfoCount(db *sql.DB) gin.HandlerFunc {
 
 }
 
-//func GetVisitorInfoByDatetime(db *sql.DB) gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//
-//		// get page id parameter
-//		page := c.Param("page")
-//
-//		// get count parameter
-//		count := c.Param("count")
-//
-//		// Convert page and count to integers
-//		pageInt, err := strconv.Atoi(page)
-//		if err != nil {
-//			// Handle error
-//			fmt.Printf("%s\n", err)
-//			return
-//		}
-//
-//		countInt, err := strconv.Atoi(count)
-//		if err != nil {
-//			// Handle error
-//			fmt.Printf("%s\n", err)
-//			return
-//		}
-//
-//		// Calculate offset
-//		offset := (pageInt - 1) * countInt
-//
-//		// get query parameters
-//		start := c.Query("start")
-//		end := c.Query("end")
-//		key := c.Query("key")
-//		val := c.Query("val")
-//
-//		var args []interface{}
-//
-//		// Query the database for records based on pagination
-//		query := "SELECT * FROM visitor_info ORDER BY id LIMIT $1 OFFSET $2"
-//		args = append(args, countInt, offset)
-//
-//		if start != "" && end != "" && val != "null" && key != "null" {
-//			query = "SELECT * FROM webpages WHERE date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
-//			args = append(args, start, end)
-//		}
-//
-//		if val != "" && key != "" {
-//			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
-//			switch key {
-//			case "id":
-//				query = "SELECT * FROM webpages WHERE id = $5 AND date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
-//				args = append(args, val)
-//			case "name":
-//				query = "SELECT * FROM webpages WHERE name LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-//				args = append(args, escapedVal)
-//			case "path":
-//				query = "SELECT * FROM webpages WHERE path LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-//				args = append(args, escapedVal)
-//			}
-//		}
-//
-//		// Prepare the statement
-//		stmt, err := db.Prepare(query)
-//		if err != nil {
-//			fmt.Printf("%s\n", err)
-//			return
-//		}
-//
-//		// Execute the prepared statement with bound parameters
-//		rows, err := stmt.Query(args...)
-//		if err != nil {
-//			fmt.Printf("%s\n", err)
-//			return
-//		}
-//
-//		//close the rows when the surrounding function returns(handler function)
-//		defer rows.Close()
-//
-//		// Iterate over the rows and scan them into WebpageModel structs
-//		var webpages []models.WebpageModel
-//
-//		for rows.Next() {
-//			var webpage models.WebpageModel
-//			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated); err != nil {
-//				fmt.Printf("%s\n", err)
-//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
-//				return
-//			}
-//			webpages = append(webpages, webpage)
-//		}
-//
-//		//this runs only when loop didn't work
-//		if err := rows.Err(); err != nil {
-//			fmt.Printf("%s\n", err)
-//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
-//			return
-//		}
-//
-//		// Return all webpages as JSON
-//		c.JSON(http.StatusOK, webpages)
-//
-//	}
-//
-//}
+func GetVisitorInfoByDatetime(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get page id parameter
+		page := c.Param("page")
+
+		// get count parameter
+		count := c.Param("count")
+
+		// Convert page and count to integers
+		pageInt, err := strconv.Atoi(page)
+		if err != nil {
+			// Handle error
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		countInt, err := strconv.Atoi(count)
+		if err != nil {
+			// Handle error
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Calculate offset
+		offset := (pageInt - 1) * countInt
+
+		// get query parameters
+		start := c.Query("start")
+		end := c.Query("end")
+		key := c.Query("key")
+		val := c.Query("val")
+
+		var args []interface{}
+
+		// Query the database for records based on pagination
+		query := "SELECT * FROM visitor_info ORDER BY id LIMIT $1 OFFSET $2"
+		args = append(args, countInt, offset)
+
+		if start != "" && end != "" && val != "null" && key != "null" {
+			query = "SELECT * FROM visitor_info WHERE visited_time BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			args = append(args, start, end)
+		}
+
+		if val != "" && key != "" {
+			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
+			switch key {
+			case "id":
+				query = "SELECT * FROM visitor_info WHERE id = $5 AND visited_time BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, val)
+			case "name":
+				query = "SELECT * FROM visitor_info WHERE device LIKE $5 AND visited_time BETWEEN $3 AND $4 ORDER BY CASE WHEN device = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			case "path":
+				query = "SELECT * FROM visitor_info WHERE country LIKE $5 AND visited_time BETWEEN $3 AND $4 ORDER BY CASE WHEN country = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			}
+		}
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		rows, err := stmt.Query(args...)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		//close the rows when the surrounding function returns(handler function)
+		defer rows.Close()
+
+		// Iterate over the rows and scan them into WebpageModel structs
+		var visitorsInfo []models.VisitorInfo
+
+		for rows.Next() {
+			var visitorInfo models.VisitorInfo
+			if err := rows.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source, &visitorInfo.VisitedDate); err != nil {
+				fmt.Printf("%s\n", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+				return
+			}
+			visitorsInfo = append(visitorsInfo, visitorInfo)
+		}
+
+		//this runs only when loop didn't work
+		if err := rows.Err(); err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+			return
+		}
+
+		// Return all webpages as JSON
+		c.JSON(http.StatusOK, visitorsInfo)
+
+	}
+
+}

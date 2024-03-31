@@ -14,7 +14,7 @@ type UserAlerts struct {
 }
 type VisitorInfo struct {
 	ID       int    `json:"id"`
-	IpAddres string `json:"ip_adrees"`
+	IpAddres string `json:"ip_address"`
 	Device   string `json:"device"`
 	Country  string `json:"country"`
 	Source   string `json:"source"`

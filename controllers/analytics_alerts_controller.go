@@ -50,7 +50,9 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 
 		if val != "" && key != "" {
 			switch key {
-
+			case "id":
+				query = "SELECT * FROM visitor_info WHERE id = $3 ORDER BY CASE WHEN id = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, val)
 			case "device":
 				query = "SELECT * FROM visitor_info WHERE device LIKE $3 ORDER BY CASE WHEN device = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
@@ -83,7 +85,7 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var visitorInfo models.VisitorInfo
-			if err := rows.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source); err != nil {
+			if err := rows.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source, &visitorInfo.VisitedDate); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

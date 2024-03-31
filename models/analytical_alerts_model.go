@@ -13,9 +13,10 @@ type UserAlerts struct {
 	CustomReminderDate string `json:"custom_reminder_date"`
 }
 type VisitorInfo struct {
-	ID       int    `json:"id"`
-	IpAddres string `json:"ip_adrees"`
-	Device   string `json:"device"`
-	Country  string `json:"country"`
-	Source   string `json:"source"`
+	ID          int    `json:"id"`
+	IpAddres    string `json:"ip_adrees"`
+	Device      string `json:"device"`
+	Country     string `json:"country"`
+	Source      string `json:"source"`
+	VisitedDate string `json:"visited_time"`
 }

@@ -43,6 +43,28 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		adminUserRoutes := api.Group("/admin_user") // admin user api group
 		{
 			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
+
+		}
+
+		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
+		{
+			//apiSubscribersRoutes.POST("/subscriber", controllers.AddWebPage(db)) // add webpage
+
+			apiSubscribersRoutes.GET("/subscribers/:count/:page", controllers.GetApiSubscribers(db))
+			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db)) // get a webpage by id
+			//apiSubscribersRoutes.GET("/webpages/status/:count/:page", controllers.GetWebPagesByStatus(db))     // get all webpages by status
+			//apiSubscribersRoutes.GET("/webpages/status/count", controllers.GetWebPagesByStatusCount(db))       // get all webpages by status
+			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
+			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
+			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))                // get all webpages count
+
+			//apiSubscribersRoutes.PUT("/webpages/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
+			//apiSubscribersRoutes.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
+			//apiSubscribersRoutes.PUT("/webpages/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+
+			//apiSubscribersRoutes.DELETE("/webpages/:id", controllers.DeleteWebPageByID(db))          // delete webpage by ID
+			//apiSubscribersRoutes.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
+
 		}
 
 		autoRespondRoutes := api.Group("/auto_respond") // auto respond api group

@@ -12,3 +12,4 @@ type UserAlerts struct {
 	ReminderOption     string `json:"reminder_option"`
 	CustomReminderDate string `json:"custom_reminder_date"`
 }
+type

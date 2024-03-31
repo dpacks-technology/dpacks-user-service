@@ -321,3 +321,30 @@ func GetVisitorByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 	}
 
 }
+
+func GetVisitorInfoById(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// Query the database for a single record
+		row := db.QueryRow("SELECT * FROM visitor_info WHERE id = $1", id)
+
+		// Create a WebpageModel to hold the data
+		var visitorInfo models.VisitorInfo
+
+		// Scan the row data into the WebpageModel
+		err := row.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source, &visitorInfo.VisitedDate)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+			return
+		}
+
+		// Return the webpage as JSON
+		c.JSON(http.StatusOK, visitorInfo)
+
+	}
+
+}

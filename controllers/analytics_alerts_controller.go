@@ -45,19 +45,17 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM webpages ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM visitor_info ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if val != "" && key != "" {
 			switch key {
-			case "id":
-				query = "SELECT * FROM webpages WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
-				args = append(args, val)
-			case "name":
-				query = "SELECT * FROM webpages WHERE name LIKE $3 ORDER BY CASE WHEN name = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+
+			case "device":
+				query = "SELECT * FROM visitor_info WHERE device LIKE $3 ORDER BY CASE WHEN device = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT * FROM webpages WHERE path LIKE $3 ORDER BY CASE WHEN path = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "country":
+				query = "SELECT * FROM visitor_info WHERE country LIKE $3 ORDER BY CASE WHEN country = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -81,16 +79,16 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into WebpageModel structs
-		var webpages []models.WebpageModel
+		var visitorsInfo []models.VisitorInfo
 
 		for rows.Next() {
-			var webpage models.WebpageModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated); err != nil {
+			var visitorInfo models.VisitorInfo
+			if err := rows.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			visitorsInfo = append(visitorsInfo, visitorInfo)
 		}
 
 		//this runs only when loop didn't work
@@ -101,8 +99,7 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
-
+		c.JSON(http.StatusOK, visitorsInfo)
 	}
 
 }

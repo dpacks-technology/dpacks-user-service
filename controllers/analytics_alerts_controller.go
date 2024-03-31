@@ -261,3 +261,63 @@ func GetVisitorInfoByDatetime(db *sql.DB) gin.HandlerFunc {
 	}
 
 }
+
+func GetVisitorByDatetimeCount(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get query parameters
+		start := c.Query("start")
+		end := c.Query("end")
+		key := c.Query("key")
+		val := c.Query("val")
+
+		var args []interface{}
+		var query string
+
+		query = "SELECT COUNT(*) FROM visitor_info"
+
+		if start != "" && end != "" && val != "null" && key != "null" {
+			query = "SELECT COUNT(*) FROM visitor_info WHERE visited_time BETWEEN $1 AND $2"
+			args = append(args, start, end)
+		}
+
+		if val != "" && key != "" {
+			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
+			switch key {
+			case "id":
+				query = "SELECT COUNT(*) FROM visitor_info WHERE id = $3 AND visited_time BETWEEN $1 AND $2"
+				args = append(args, val)
+			case "name":
+				query = "SELECT COUNT(*) FROM visitor_info WHERE device LIKE $3 AND visited_time BETWEEN $1 AND $2"
+				args = append(args, escapedVal)
+			case "path":
+				query = "SELECT COUNT(*) FROM visitor_info WHERE country LIKE $3 AND visited_time BETWEEN $1 AND $2"
+				args = append(args, escapedVal)
+			}
+		}
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		var count int
+		err = stmt.QueryRow(args...).Scan(&count)
+
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Close the statement
+		defer stmt.Close()
+
+		// Return all webpages as JSON
+		c.JSON(http.StatusOK, count)
+
+	}
+
+}

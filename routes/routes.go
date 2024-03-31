@@ -45,9 +45,23 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
 		}
 
-		autoRespondRoutes := api.Group("/auto_respond") // auto respond api group
+		autoRespondRoutes := api.Group("/chat") // auto respond api group
 		{
-			autoRespondRoutes.GET("/", controllers.GetAutoResponds(db)) // get all auto responds
+			autoRespondRoutes.GET("/auto_respond/:count/:page", controllers.GetAutoResponds(db)) // get all auto responds
+			autoRespondRoutes.POST("/auto_respond", controllers.AddAutoRespond(db))
+			autoRespondRoutes.GET("/auto_respond/id/:id", controllers.GetAutoRespondsById(db))                      // get a webpage by id
+			autoRespondRoutes.GET("/auto_respond/status/:count/:page", controllers.GetAutoRespondsByStatus(db))     // get all webpages by status
+			autoRespondRoutes.GET("/auto_respond/status/count", controllers.GetAutoRespondsByStatusCount(db))       // get all webpages by status
+			autoRespondRoutes.GET("/auto_respond/datetime/:count/:page", controllers.GetAutoRespondsByDatetime(db)) // get all webpages by datetime
+			autoRespondRoutes.GET("/auto_respond/datetime/count", controllers.GetAutoRespondsByDatetimeCount(db))   // get all webpages by datetime
+			autoRespondRoutes.GET("/auto_respond/count", controllers.GetAutoRespondsCount(db))                      // get all webpages count
+
+			autoRespondRoutes.PUT("/auto_respond/status/:id", controllers.UpdateAutoRespondsStatus(db)) // update webpage status by id
+			autoRespondRoutes.PUT("/auto_respond/:id", controllers.EditAutoResponds(db))                // edit webpage by id
+			autoRespondRoutes.PUT("/auto_respond/status/bulk/:id", controllers.UpdateAutoRespondsStatusBulk(db))
+
+			autoRespondRoutes.DELETE("/auto_respond/:id", controllers.DeleteAutoRespondsID(db))            // delete webpage by ID
+			autoRespondRoutes.DELETE("/auto_respond/bulk/:id", controllers.DeleteAutoRespondsByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
 		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group

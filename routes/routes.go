@@ -82,8 +82,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db)) // get all webpages
 			//rateLimitRouts.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
-			//rateLimitRouts.GET("/webpages/status/:count/:page", controllers.GetWebPagesByStatus(db))     // get all webpages by status
-			//rateLimitRouts.GET("/webpages/status/count", controllers.GetWebPagesByStatusCount(db))       // get all webpages by status
+			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db)) // get all webpages by status
+			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))   // get all webpages by status
 			//rateLimitRouts.GET("/webpages/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
 			//rateLimitRouts.GET("/webpages/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
 			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db)) // get all webpages count

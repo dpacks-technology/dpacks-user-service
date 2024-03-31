@@ -11,45 +11,46 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AddWebPage handles POST /api/web/webpages - CREATE
-//func AddSubscribers(db *sql.DB) gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//
-//		// get the JSON data
-//		var subscriber models.ApiSubscribers
-//		if err := c.ShouldBindJSON(&subscriber); err != nil {
-//			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//			return
-//		}
-//
-//		// Validate the webpage data
-//		if err := validators.ValidateName(subscriber, true); err != nil {
-//			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//			return
-//		}
-//
-//		// query to insert the webpage
-//		query := "INSERT INTO webpages (name, webid, path, status) VALUES ($1, $2, $3, $4)"
-//
-//		// Prepare the statement
-//		stmt, err := db.Prepare(query)
-//		if err != nil {
-//			fmt.Printf("%s\n", err)
-//			return
-//		}
-//
-//		// Execute the prepared statement with bound parameters
-//		_, err = stmt.Exec(webpage.Name, webpage.WebID, webpage.Path, 1)
-//		if err != nil {
-//			fmt.Printf("%s\n", err)
-//			return
-//		}
-//
-//		// Return a success message
-//		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
-//
-//	}
-//}
+// AddSubscribers handles POST /api/web/webpages - CREATE
+func AddSubscribers(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get the JSON data
+		var keypair models.KeyPairs
+		if err := c.ShouldBindJSON(&keypair); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		//// Validate the webpage data
+		//if err := validators.ValidateName(keypair, true); err != nil {
+		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		//	return
+		//}
+		//keypair.ClientID =
+
+		// query to insert the webpage
+		query := "INSERT INTO webpages (name, webid, path, status) VALUES ($1, $2, $3, $4)"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(webpage.Name, webpage.WebID, webpage.Path, 1)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
+
+	}
+}
 
 // GetApiSubscribers handles GET /api/web/pages/ - READ
 func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
@@ -127,7 +128,7 @@ func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var keypair models.KeyPairs
-			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.Created_on); err != nil {
+			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -162,7 +163,7 @@ func GetApiSubscriberById(db *sql.DB) gin.HandlerFunc {
 		var keypair models.KeyPairs
 
 		// Scan the row data into the WebpageModel
-		err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.Created_on)
+		err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
@@ -437,7 +438,7 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var keypair models.KeyPairs
-			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.Created_on); err != nil {
+			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

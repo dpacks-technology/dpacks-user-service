@@ -3,11 +3,20 @@ package routes
 import (
 	"database/sql"
 	"dpacks-go-services-template/controllers"
+	"dpacks-go-services-template/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
+	// Create a new rate limiter middleware
+	rateLimiter, err := middleware.NewRateLimit(db)
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+
 	api := r.Group("/api")
+
 	{
 		exampleRoutes := api.Group("/example") // example api group
 		{
@@ -73,6 +82,16 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
+		}
+
+		webContentRoutes := api.Group("/webcontent")
+		//apply ratelimiter for webcontent subgrooup
+		webContentRoutes.Use(rateLimiter.Limit()) //this also possible
+		webContentRoutes.Use(middleware.AuthMiddleware(db))
+		{
+			//or this also possible
+			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
+			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
 	}
 }

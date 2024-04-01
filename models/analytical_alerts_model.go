@@ -15,6 +15,7 @@ type UserAlerts struct {
 type UserAlertsModel struct {
 	AlertID            int    `json:"alert_id"`
 	UserID             int    `json:"user_id"`
+	WebsiteeId         string `json:"website_id"`
 	UserEmail          string `json:"user_email"`
 	AlertThreshold     int    `json:"alert_threshold"`
 	AlertSubject       string `json:"alert_subject"`

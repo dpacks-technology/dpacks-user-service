@@ -52,7 +52,21 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
 		{
-			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+			analyticalAlertsRoutes.POST("/Alert", controllers.CreateNewAlert(db)) // add webpage AddWebPage
+
+			analyticalAlertsRoutes.GET("/Alert/:count/:page", controllers.GetAllAlert(db))              //GetWebPages get all webpages
+			analyticalAlertsRoutes.GET("/Alert/:id", controllers.GetWebPageById(db))                    // get a webpage by id
+			analyticalAlertsRoutes.GET("/Alert/status/:count/:page", controllers.GetAlertsByStatus(db)) // get all webpages by status
+			analyticalAlertsRoutes.GET("/Alert/status/count", controllers.GetAlertsByStatusCount(db))   // get all webpages by status
+
+			analyticalAlertsRoutes.GET("/Alert/count", controllers.GetAlertsCount(db)) // get all webpages count
+
+			analyticalAlertsRoutes.PUT("/Alert/status/:id", controllers.UpdateAlertStatus(db))            // update webpage status by id
+			analyticalAlertsRoutes.PUT("/Alert/:id", controllers.EditAlertPage(db))                       // edit webpage by id
+			analyticalAlertsRoutes.PUT("/Alert/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+
+			analyticalAlertsRoutes.DELETE("/Alert/:id", controllers.DeleteAlertByID(db))            // delete webpage by ID
+			analyticalAlertsRoutes.DELETE("/Alert/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group

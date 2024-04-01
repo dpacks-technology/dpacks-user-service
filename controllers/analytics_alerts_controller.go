@@ -3,49 +3,48 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/validators"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-// GetAnalyticalAlerts function
-func GetAnalyticalAlerts(db *sql.DB) gin.HandlerFunc {
+func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
+
 	return func(c *gin.Context) {
 
-		// Query the database for all records
-		rows, err := db.Query("SELECT * FROM useralerts")
+		// get the JSON data
+		var webpage models.WebpageModel
+		if err := c.ShouldBindJSON(&webpage); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
+		// Validate the webpage data
+		if err := validators.ValidateName(webpage, true); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// query to insert the webpage
+		query := "INSERT INTO webpages (name, webid, path, status) VALUES ($1, $2, $3, $4)"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
 		if err != nil {
 			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
 			return
 		}
 
-		//close the rows when the surrounding function returns(handler function)
-		defer rows.Close()
-
-		// Iterate over the rows and scan them into UserAlerts structs
-		var userAlerts []models.UserAlerts
-
-		for rows.Next() {
-			var userAlert models.UserAlerts
-			if err := rows.Scan(&userAlert.AlertID, &userAlert.UserID, &userAlert.UserEmail, &userAlert.AlertThreshold, &userAlert.AlertSubject, &userAlert.AlertContent, &userAlert.WhenAlertRequired, &userAlert.ReminderOption, &userAlert.CustomReminderDate); err != nil {
-				fmt.Printf("%s\n", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
-				return
-			}
-			userAlerts = append(userAlerts, userAlert)
-		}
-
-		//this runs only when loop didn't work
-		if err := rows.Err(); err != nil {
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(webpage.Name, webpage.WebID, webpage.Path, 1)
+		if err != nil {
 			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
 			return
 		}
 
-		// Return all userAlerts as JSON
-		c.JSON(http.StatusOK, userAlerts)
+		// Return a success message
+		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
 
 	}
 }

@@ -42,21 +42,14 @@ func AddAutoRespond(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		result, err := stmt.Exec(autorespond.Message, autorespond.Trigger, autorespond.LastUpdated, autorespond.Status)
+		_, err = stmt.Exec(autorespond.Message, autorespond.Trigger, autorespond.LastUpdated, autorespond.Status)
 		if err != nil {
 			fmt.Printf("Error executing statement: %s\n", err)
 			return
 		}
 
-		// Check if the insert was successful
-		lastID, err := result.LastInsertId()
-		if err != nil {
-			fmt.Printf("Error getting last insert ID: %s\n", err)
-			return
-		}
-
 		// Return a success message
-		c.JSON(http.StatusCreated, gin.H{"message": "Message added successfully", "id": lastID})
+		c.JSON(http.StatusCreated, gin.H{"message": "Message added successfully"})
 	}
 }
 
@@ -599,7 +592,7 @@ func EditAutoResponds(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Update the webpage in the database
-		_, err := db.Exec("UPDATE automated_messages SET message = $1 WHERE id = $2", autorespond.Message, id)
+		_, err := db.Exec("UPDATE automated_messages SET message = $1 ,trigger = $2 WHERE id = $3", autorespond.Message, autorespond.Trigger, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

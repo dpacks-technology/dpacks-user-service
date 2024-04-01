@@ -82,11 +82,11 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db)) // get all webpages
 			//rateLimitRouts.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
-			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db)) // get all webpages by status
-			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))   // get all webpages by status
-			//rateLimitRouts.GET("/webpages/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
-			//rateLimitRouts.GET("/webpages/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
-			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db)) // get all webpages count
+			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))     // get all webpages by status
+			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))       // get all webpages by status
+			rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db)) // get all webpages by datetime
+			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))   // get all webpages by datetime
+			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))                       // get all webpages count
 
 			//rateLimitRouts.PUT("/webpages/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
 			//rateLimitRouts.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id

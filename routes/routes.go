@@ -31,6 +31,12 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		webRoutes := api.Group("/web") // web api group
 		{
+			webRoutes.POST("/site", controllers.AddSite(db))          // add site
+			webRoutes.GET("/sites", controllers.ReadSites(db))        // read all sites
+			webRoutes.GET("/site/:id", controllers.GetSiteById(db))   // read site by id
+			webRoutes.PUT("/site/:id", controllers.EditSite(db))      // edit site by id
+			webRoutes.DELETE("/site/:id", controllers.DeleteSite(db)) // delete site by id
+
 			webRoutes.POST("/webpage", controllers.AddWebPage(db)) // add webpage
 
 			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db))                    // get all webpages

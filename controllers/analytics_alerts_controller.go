@@ -56,6 +56,7 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 
 		//get id parameter
 		id := c.Param("id")
+
 		// get page id parameter
 		page := c.Param("page")
 
@@ -80,7 +81,7 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 		// Calculate offset
 		offset := (pageInt - 1) * countInt
 
-		// get query parameters
+		//get query parameters
 		key := c.Query("key")
 		val := c.Query("val")
 		escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
@@ -88,26 +89,29 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM useralerts WHERE website_id = $3 ORDER BY alertid LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM useralerts WHERE website_id=$3 ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset, id)
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM useralerts WHERE alertid = $3 AND website_id = $4 ORDER BY alertid LIMIT $1 OFFSET $2"
-				args = append(args, val, id)
+				query = "SELECT * FROM useralerts WHERE alert_id = $3  ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, val)
+				fmt.Printf("%s\n %d\n %d\n", args, val)
+
 			case "alertthreshold":
-				query = "SELECT * FROM useralerts WHERE alertthreshold LIKE $3 AND website_id = $4 ORDER BY CASE WHEN alertthreshold = $3 THEN 1 ELSE 2 END, alertid LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal, id)
+				query = "SELECT * FROM useralerts WHERE alert_threshold LIKE $3  ORDER BY CASE WHEN alert_threshold = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
 			case "whenalertrequired":
-				query = "SELECT * FROM useralerts WHERE whenalertrequired LIKE $3 AND website_id = $4 ORDER BY CASE WHEN whenalertrequired = $3 THEN 1 ELSE 2 END, alertid LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal, id)
+				query = "SELECT * FROM useralerts WHERE when_alert_required LIKE $3  ORDER BY CASE WHEN when_alert_required = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
 			}
 		}
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
 		if err != nil {
+
 			fmt.Printf("%s\n", err)
 			return
 		}
@@ -120,21 +124,24 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
+
+		//close the rows when the surrounding function returns(handler function)
 
 		// Iterate over the rows and scan them into WebpageModel structs
 		var alerts []models.UserAlertsModel
-
 		for rows.Next() {
 			var alert models.UserAlertsModel
-			if err := rows.Scan(&alert.AlertID, &alert.WebsiteeId, &alert.AlertSubject, alert.AlertThreshold, &alert.UserID, &alert.UserEmail, &alert.Status, &alert.AlertContent, &alert.CustomReminderDate, &alert.RepeatOn, &alert.WhenAlertRequired); err != nil {
+			if err := rows.Scan(&alert.AlertID, &alert.UserID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.CustomReminderDate, &alert.Status, &alert.WebsiteeId); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
+			fmt.Printf("%s\n", alert)
 			alerts = append(alerts, alert)
 		}
+
+		fmt.Printf("%s\n", alerts)
 
 		//this runs only when loop didn't work
 		if err := rows.Err(); err != nil {
@@ -165,7 +172,7 @@ func GetAlertsCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT COUNT(*) FROM useralerts WHERE website_id = $2"
+		query := "SELECT COUNT(*) FROM useralerts WHERE website_id = $1"
 		args = append(args, id)
 
 		if val != "" && key != "" {

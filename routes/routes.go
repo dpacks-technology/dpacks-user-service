@@ -88,9 +88,9 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))   // get all webpages by datetime
 			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))                       // get all webpages count
 
-			//rateLimitRouts.PUT("/webpages/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
+			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db)) // update webpage status by id
 			//rateLimitRouts.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
-			//rateLimitRouts.PUT("/webpages/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db)) // update webpage status by id (bulk)
 			//
 			//rateLimitRouts.DELETE("/webpages/:id", controllers.DeleteWebPageByID(db))          // delete webpage by ID
 			//rateLimitRouts.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)

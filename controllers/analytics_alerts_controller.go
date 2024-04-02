@@ -141,8 +141,6 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 			alerts = append(alerts, alert)
 		}
 
-		fmt.Printf("%s\n", alerts)
-
 		//this runs only when loop didn't work
 		if err := rows.Err(); err != nil {
 			fmt.Printf("%s\n", err)

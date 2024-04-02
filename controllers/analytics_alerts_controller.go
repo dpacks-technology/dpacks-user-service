@@ -341,3 +341,69 @@ func GetAlertsByStatus(db *sql.DB) gin.HandlerFunc {
 	}
 
 }
+func GetAlertsByStatusCount(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get status parameter (array)
+		statuses := c.Query("status")
+
+		// get query parameters
+		key := c.Query("key")
+		val := c.Query("val")
+
+		var args []interface{}
+		var query string
+
+		query = "SELECT COUNT(*) FROM useralerts"
+
+		switch statuses {
+		case "1":
+			query = "SELECT COUNT(*) FROM useralerts WHERE status IN ($1)"
+			args = append(args, 1)
+		case "0":
+			query = "SELECT COUNT(*) FROM useralerts WHERE status IN ($1)"
+			args = append(args, 0)
+		}
+
+		if val != "" && key != "" {
+
+			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
+
+			switch key {
+			case "id":
+				query = "SELECT COUNT(*) FROM useralerts WHERE id = $2 AND status IN ($1)"
+				args = append(args, val)
+			case "alertthreshold":
+				query = "SELECT COUNT(*) FROM useralerts WHERE alertthreshold LIKE $2 AND status IN ($1)"
+				args = append(args, escapedVal)
+			case "whenalertrequired":
+				query = "SELECT COUNT(*) FROM useralerts WHERE whenalertrequired LIKE $2 AND status IN ($1)"
+				args = append(args, escapedVal)
+			}
+		}
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		var count int
+		err = stmt.QueryRow(args...).Scan(&count)
+
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Close the statement
+		defer stmt.Close()
+
+		// Return all webpages as JSON
+		c.JSON(http.StatusOK, count)
+
+	}
+
+}

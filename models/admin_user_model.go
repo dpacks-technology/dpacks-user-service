@@ -6,4 +6,6 @@ type AdminUserModel struct {
 	Phone    int    `json:"phone"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	AddedOn  string `json:"added_on"`
+	Status   int    `json:"status"`
 }

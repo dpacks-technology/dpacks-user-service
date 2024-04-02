@@ -407,3 +407,102 @@ func GetAlertsByStatusCount(db *sql.DB) gin.HandlerFunc {
 	}
 
 }
+
+//func EditAlert(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//
+//		// get id parameter
+//		id := c.Param("id")
+//
+//		// get the JSON data - only the name
+//		var alert models.UserAlertsModel
+//		if err := c.ShouldBindJSON(&alert); err != nil {
+//			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//			return
+//		}
+//
+//		//// Validate the webpage data
+//		//if err := validators.ValidateName(alert, false); err != nil {
+//		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//		//	return
+//		//}
+//
+//		// Update the webpage in the database
+//		_, err := db.Exec("UPDATE useralerts SET name = $1 WHERE id = $2", alert.Name, id)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			return
+//		}
+//
+//		// Return a success message
+//		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+//
+//	}
+//
+//}
+
+func DeleteAlertByID(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// query to delete the webpage
+		query := "DELETE FROM useralerts WHERE id = $1"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Alert deleted successfully"})
+
+	}
+
+}
+
+func DeleteAlertByIDBulk(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get ids array as a parameter as integer
+		id := c.Param("id")
+
+		// Convert the string of ids to an array of ids
+		ids := strings.Split(id, ",")
+
+		// Delete the webpage from the database
+		for _, id := range ids {
+			// query to delete the webpage
+			query := "DELETE FROM useralerts WHERE id = $1"
+
+			// Prepare the statement
+			stmt, err := db.Prepare(query)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+			// Execute the prepared statement with bound parameters
+			_, err = stmt.Exec(id)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
+
+	}
+
+}

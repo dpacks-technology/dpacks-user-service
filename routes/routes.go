@@ -80,16 +80,16 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db)) // add webpage
 
-			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db)) // get all webpages
-			//rateLimitRouts.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
+			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))                    // get all webpages
+			rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))                           // get a webpage by id
 			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))     // get all webpages by status
 			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))       // get all webpages by status
 			rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db)) // get all webpages by datetime
 			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))   // get all webpages by datetime
 			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))                       // get all webpages count
 
-			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db)) // update webpage status by id
-			//rateLimitRouts.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
+			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))          // update webpage status by id
+			rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))                         // edit webpage by id
 			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db)) // update webpage status by id (bulk)
 			//
 			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))          // delete webpage by ID

@@ -147,31 +147,31 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 }
 
 // GetWebPageById handles GET /api/web/webpages/:id - READ
-//func GetWebPageById(db *sql.DB) gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//
-//		// get id parameter
-//		id := c.Param("id")
-//
-//		// Query the database for a single record
-//		row := db.QueryRow("SELECT * FROM webpages WHERE id = $1", id)
-//
-//		// Create a WebpageModel to hold the data
-//		var webpage models.WebpageModel
-//
-//		// Scan the row data into the WebpageModel
-//		err := row.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated)
-//		if err != nil {
-//			fmt.Printf("%s\n", err)
-//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
-//			return
-//		}
-//
-//		// Return the webpage as JSON
-//		c.JSON(http.StatusOK, webpage)
-//
-//	}
-//}
+func GetRatelimitById(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// Query the database for a single record
+		row := db.QueryRow("SELECT * FROM endpoint_ratelimits WHERE id = $1", id)
+
+		// Create a WebpageModel to hold the data
+		var ratelimit models.EndpointRateLimit
+
+		// Scan the row data into the WebpageModel
+		err := row.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+			return
+		}
+
+		// Return the webpage as JSON
+		c.JSON(http.StatusOK, ratelimit)
+
+	}
+}
 
 // GetWebPagesByStatusCount handles GET /api/web/webpages/status/:status/count - READ
 func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
@@ -551,43 +551,41 @@ func GetRateLimitCount(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// // EditWebPage handles PUT /api/web/webpages/:id - UPDATE
-//
-//	func EditWebPage(db *sql.DB) gin.HandlerFunc {
-//		return func(c *gin.Context) {
-//
-//			// get id parameter
-//			id := c.Param("id")
-//
-//			// get the JSON data - only the name
-//			var webpage models.WebpageModel
-//			if err := c.ShouldBindJSON(&webpage); err != nil {
-//				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//				return
-//			}
-//
-//			// Validate the webpage data
-//			if err := validators.ValidateName(webpage, false); err != nil {
-//				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-//				return
-//			}
-//
-//			// Update the webpage in the database
-//			_, err := db.Exec("UPDATE webpages SET name = $1 WHERE id = $2", webpage.Name, id)
-//			if err != nil {
-//				fmt.Printf("%s\n", err)
-//				return
-//			}
-//
-//			// Return a success message
-//			c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
-//
-//		}
-//	}
-//
+// EditWebPage handles PUT /api/web/webpages/:id - UPDATE
+
+func EditRatelimit(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// get the JSON data - only the name
+		var ratelimit models.EndpointRateLimit
+		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Validate the webpage data
+		if err := validators.ValidatePath(ratelimit, false); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Update the webpage in the database
+		_, err := db.Exec("UPDATE endpoint_ratelimits SET ratelimit = $1 WHERE id = $2", ratelimit.Limit, id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+
+	}
+}
 
 // DeleteWebPageByID handles DELETE /api/web/webpages/:id - DELETE
-
 func DeleteRatelimitByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

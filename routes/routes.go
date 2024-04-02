@@ -54,10 +54,10 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			analyticalAlertsRoutes.POST("/Alert", controllers.CreateNewAlert(db)) // add webpage AddWebPage
 
-			analyticalAlertsRoutes.GET("/Alerts/:count/:page/:id", controllers.GetAllAlert(db)) //GetWebPages get all webpages
-			analyticalAlertsRoutes.GET("/Alert/:id", controllers.GetAlertbyId(db))              // get a webpage by id
-			//analyticalAlertsRoutes.GET("/Alert/status/:count/:page", controllers.GetAlertsByStatus(db)) // get all webpages by status
-			//analyticalAlertsRoutes.GET("/Alert/status/count", controllers.GetAlertsByStatusCount(db))   // get all webpages by status
+			analyticalAlertsRoutes.GET("/Alerts/:count/:page/:id", controllers.GetAllAlert(db))         //GetWebPages get all webpages
+			analyticalAlertsRoutes.GET("/Alert/:id", controllers.GetAlertbyId(db))                      // get a webpage by id
+			analyticalAlertsRoutes.GET("/Alert/status/:count/:page", controllers.GetAlertsByStatus(db)) // get all webpages by status
+			analyticalAlertsRoutes.GET("/Alert/status/count", controllers.GetAlertsByStatusCount(db))   // get all webpages by status
 
 			analyticalAlertsRoutes.GET("/Alert/count/:id", controllers.GetAlertsCount(db)) // get all webpages count
 

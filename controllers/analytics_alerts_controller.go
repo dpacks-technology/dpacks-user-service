@@ -231,6 +231,113 @@ func GetAlertbyId(db *sql.DB) gin.HandlerFunc {
 
 }
 
-//func GetAlertsByStatus(db *sql.DB) gin.HandlerFunc {
-//
-//}
+func GetAlertsByStatus(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get status parameter (array)
+		statuses := c.Query("status")
+
+		// get page id parameter
+		page := c.Param("page")
+
+		// get count parameter
+		count := c.Param("count")
+
+		// Convert page and count to integers
+		pageInt, err := strconv.Atoi(page)
+		if err != nil {
+			// Handle error
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		countInt, err := strconv.Atoi(count)
+		if err != nil {
+			// Handle error
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Calculate offset
+		offset := (pageInt - 1) * countInt
+
+		// get query parameters
+		key := c.Query("key")
+		val := c.Query("val")
+
+		var args []interface{}
+		var query string
+
+		query = "SELECT * FROM useralerts ORDER BY id LIMIT $1 OFFSET $2"
+		args = append(args, countInt, offset)
+
+		switch statuses {
+		case "1":
+			query = "SELECT * FROM useralerts WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			args = append(args, 1)
+		case "0":
+			query = "SELECT * FROM useralerts WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			args = append(args, 0)
+		}
+
+		if val != "" && key != "" {
+
+			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
+
+			switch key {
+			case "id":
+				query = "SELECT * FROM useralerts WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM useralerts WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, val)
+			case "alertthreshold":
+				query = "SELECT * FROM useralerts WHERE alertthreshold LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			case "whenalertrequired":
+				query = "SELECT * FROM useralerts WHERE whenalertrequired LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			}
+		}
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		rows, err := stmt.Query(args...)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		//close the rows when the surrounding function returns(handler function)
+		defer rows.Close()
+
+		// Iterate over the rows and scan them into WebpageModel structs
+		var alerts []models.UserAlertsModel
+
+		for rows.Next() {
+			var alert models.UserAlertsModel
+			if err := rows.Scan(&alert.AlertID, &alert.UserID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.CustomReminderDate, &alert.Status, &alert.WebsiteeId); err != nil {
+				fmt.Printf("%s\n", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+				return
+			}
+			alerts = append(alerts, alert)
+		}
+
+		//this runs only when loop didn't work
+		if err := rows.Err(); err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+			return
+		}
+
+		// Return all webpages as JSON
+		c.JSON(http.StatusOK, alerts)
+
+	}
+
+}

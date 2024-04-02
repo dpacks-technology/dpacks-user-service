@@ -78,7 +78,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
-			//rateLimitRouts.POST("/webpage", controllers.AddWebPage(db)) // add webpage
+			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db)) // add webpage
 
 			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db)) // get all webpages
 			//rateLimitRouts.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get a webpage by id
@@ -92,8 +92,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			//rateLimitRouts.PUT("/webpages/:id", controllers.EditWebPage(db))                         // edit webpage by id
 			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db)) // update webpage status by id (bulk)
 			//
-			//rateLimitRouts.DELETE("/webpages/:id", controllers.DeleteWebPageByID(db))          // delete webpage by ID
-			//rateLimitRouts.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
+			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))          // delete webpage by ID
+			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 	}
 }

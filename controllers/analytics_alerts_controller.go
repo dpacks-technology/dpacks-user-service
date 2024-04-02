@@ -3,7 +3,6 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
-	"dpacks-go-services-template/validators"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -16,20 +15,14 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get the JSON data
-		var webpage models.WebpageModel
-		if err := c.ShouldBindJSON(&webpage); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Validate the webpage data
-		if err := validators.ValidateName(webpage, true); err != nil {
+		var alert models.UserAlertsModel
+		if err := c.ShouldBindJSON(&alert); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// query to insert the webpage
-		query := "INSERT INTO webpages (name, webid, path, status) VALUES ($1, $2, $3, $4)"
+		query := "INSERT INTO useralert (id, user_id, alert_threshold, alert_subject,alert_content,when_alert_required,repeat_on,custom_reminder_date,status,website_id) VALUES ($1, $2, $3, $4,$5,$6,$7,$8,1,$9)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -39,14 +32,14 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(webpage.Name, webpage.WebID, webpage.Path, 1)
+		_, err = stmt.Exec(alert.AlertID, alert.UserID, alert.AlertThreshold, alert.AlertSubject, alert.AlertContent, alert.WhenAlertRequired, alert.RepeatOn, alert.CustomReminderDate, alert.Status, alert.WebsiteeId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
 		// Return a success message
-		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
+		c.JSON(http.StatusCreated, gin.H{"message": "Alert set Succesfully"})
 
 	}
 }
@@ -210,3 +203,34 @@ func GetAlertsCount(db *sql.DB) gin.HandlerFunc {
 	}
 
 }
+
+func GetAlertbyId(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// Query the database for a single record
+		row := db.QueryRow("SELECT * FROM useralerts WHERE id = $1", id)
+
+		// Create a WebpageModel to hold the data
+		var alert models.UserAlertsModel
+
+		// Scan the row data into the WebpageModel
+		err := row.Scan(&alert.AlertID, &alert.UserID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.CustomReminderDate, &alert.Status, &alert.WebsiteeId)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+			return
+		}
+
+		// Return the webpage as JSON
+		c.JSON(http.StatusOK, alert)
+
+	}
+
+}
+
+//func GetAlertsByStatus(db *sql.DB) gin.HandlerFunc {
+//
+//}

@@ -124,16 +124,13 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			//
 			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))          // delete webpage by ID
 			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db)) // delete webpage by ID (bulk)
-		
-      webContentRoutes := api.Group("/webcontent")
-      //apply ratelimiter for webcontent subgrooup
-		  webContentRoutes.Use(rateLimiter.Limit()) //this also possible
-		  webContentRoutes.Use(middleware.AuthMiddleware(db))
+		}
+
+		webContentRoutes := api.Group("/webcontent")
+		//apply ratelimiter for webcontent subgrooup
+		webContentRoutes.Use(rateLimiter.Limit()) //this also possible
+		webContentRoutes.Use(middleware.AuthMiddleware(db))
 		{
-      //apply ratelimiter for webcontent subgrooup
-		  webContentRoutes.Use(rateLimiter.Limit()) //this also possible
-		  webContentRoutes.Use(middleware.AuthMiddleware(db))
-			//or this also possible
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}

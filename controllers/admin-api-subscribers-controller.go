@@ -5,8 +5,6 @@ import (
 	"dpacks-go-services-template/models"
 	"dpacks-go-services-template/validators"
 	"fmt"
-	"github.com/google/uuid"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -486,17 +484,4 @@ func DeleteApiSubscriberByIDBulk(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
 
 	}
-}
-
-// Function to generate a unique ID
-func generateUniqueID() string {
-	// Generate a new UUID (version 4)
-	id, err := uuid.NewRandom()
-	if err != nil {
-		log.Println("Error generating UUID:", err)
-		return "" // Return an empty string in case of error
-	}
-
-	// Convert UUID to string
-	return id.String()
 }

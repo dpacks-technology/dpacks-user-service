@@ -15,14 +15,14 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get the JSON data
-		var alert models.UserAlertsModel
+		var alert models.CreateNewUserAlert
 		if err := c.ShouldBindJSON(&alert); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// query to insert the webpage
-		query := "INSERT INTO useralert (id, user_id, alert_threshold, alert_subject,alert_content,when_alert_required,repeat_on,custom_reminder_date,status,website_id) VALUES ($1, $2, $3, $4,$5,$6,$7,$8,1,$9)"
+		query := "INSERT INTO useralert (alert_threshold, alert_subject,alert_content,when_alert_required,repeat_on,website_id) VALUES ($1, $2, $3, $4,$5,$6)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -32,7 +32,7 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(alert.AlertID, alert.UserID, alert.AlertThreshold, alert.AlertSubject, alert.AlertContent, alert.WhenAlertRequired, alert.RepeatOn, alert.CustomReminderDate, alert.Status, alert.WebsiteeId)
+		_, err = stmt.Exec(alert.AlertThreshold, alert.AlertSubject, alert.AlertContent, alert.WhenAlertRequired, alert.RepeatOn, alert.WebsiteeId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -77,27 +77,21 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 		//get query parameters
 		key := c.Query("key")
 		val := c.Query("val")
-		escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
+		//escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM useralerts WHERE website_id=$3 ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT id,alert_threshold,alert_subject,alert_content,when_alert_required,repeat_on,status,website_id FROM useralerts WHERE website_id=$3 ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset, id)
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM useralerts WHERE alert_id = $3  ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM useralerts WHERE id = $3  ORDER BY id LIMIT $1 OFFSET $2"
+				fmt.Printf("%s", args)
 				args = append(args, val)
-				fmt.Printf("%s\n %d\n %d\n", args, val)
 
-			case "alertthreshold":
-				query = "SELECT * FROM useralerts WHERE alert_threshold LIKE $3  ORDER BY CASE WHEN alert_threshold = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal)
-			case "whenalertrequired":
-				query = "SELECT * FROM useralerts WHERE when_alert_required LIKE $3  ORDER BY CASE WHEN when_alert_required = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal)
 			}
 		}
 
@@ -122,10 +116,10 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 
 		// Iterate over the rows and scan them into WebpageModel structs
-		var alerts []models.UserAlertsModel
+		var alerts []models.UserAlertsShow
 		for rows.Next() {
-			var alert models.UserAlertsModel
-			if err := rows.Scan(&alert.AlertID, &alert.UserID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.CustomReminderDate, &alert.Status, &alert.WebsiteeId); err != nil {
+			var alert models.UserAlertsShow
+			if err := rows.Scan(&alert.AlertID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.Status, &alert.WebsiteeId); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -169,7 +163,7 @@ func GetAlertsCount(db *sql.DB) gin.HandlerFunc {
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM useralerts WHERE alertid = $1 AND website_id = $2"
+				query = "SELECT COUNT(*) FROM useralerts WHERE id = $1 AND website_id = $2"
 				args = append(args, val, id)
 			case "alertthreshold":
 				query = "SELECT COUNT(*) FROM useralerts WHERE alertthreshold LIKE $1 AND website_id = $2"
@@ -214,10 +208,10 @@ func GetAlertbyId(db *sql.DB) gin.HandlerFunc {
 		row := db.QueryRow("SELECT * FROM useralerts WHERE id = $1", id)
 
 		// Create a WebpageModel to hold the data
-		var alert models.UserAlertsModel
+		var alert models.UserAlertsShow
 
 		// Scan the row data into the WebpageModel
-		err := row.Scan(&alert.AlertID, &alert.UserID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.CustomReminderDate, &alert.Status, &alert.WebsiteeId)
+		err := row.Scan(&alert.AlertID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.Status, &alert.WebsiteeId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
@@ -316,11 +310,11 @@ func GetAlertsByStatus(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into WebpageModel structs
-		var alerts []models.UserAlertsModel
+		var alerts []models.UserAlertsShow
 
 		for rows.Next() {
-			var alert models.UserAlertsModel
-			if err := rows.Scan(&alert.AlertID, &alert.UserID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.CustomReminderDate, &alert.Status, &alert.WebsiteeId); err != nil {
+			var alert models.UserAlertsShow
+			if err := rows.Scan(&alert.AlertID, &alert.AlertThreshold, &alert.AlertSubject, &alert.AlertContent, &alert.WhenAlertRequired, &alert.RepeatOn, &alert.Status, &alert.WebsiteeId); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -501,8 +495,88 @@ func DeleteAlertByIDBulk(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Alert bulk deleted successfully"})
 
 	}
 
+}
+
+func UpdateAlertStatus(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// get the JSON data - only the status
+		var alert models.UserAlertStatus
+		if err := c.ShouldBindJSON(&alert); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// query to update the webpage status
+		query := "UPDATE useralerts SET status = $1 WHERE id = $2"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(alert.Status, id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+
+	}
+
+}
+
+func UpdateAlertStatusBulk(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// Convert the string of ids to an array of ids
+		ids := strings.Split(id, ",")
+
+		// get the JSON data - only the status
+		var alert models.UserAlertStatus
+		if err := c.ShouldBindJSON(&alert); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Update the webpage status in the database
+		for _, id := range ids {
+
+			query := "UPDATE useralerts SET status = $1 WHERE id = $2"
+
+			// Prepare the statement
+			stmt, err := db.Prepare(query)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+			// Execute the prepared statement with bound parameters
+			_, err = stmt.Exec(alert.Status, id)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+
+	}
 }

@@ -61,9 +61,9 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			analyticalAlertsRoutes.GET("/Alert/count/:id", controllers.GetAlertsCount(db)) // get all webpages count
 
-			//analyticalAlertsRoutes.PUT("/Alert/status/:id", controllers.UpdateAlertStatus(db))          // update webpage status by id
+			analyticalAlertsRoutes.PUT("/Alert/status/:id", controllers.UpdateAlertStatus(db)) // update webpage status by id
 			////analyticalAlertsRoutes.PUT("/Alert/:id", controllers.EditAlert(db)) // edit webpage by id
-			//analyticalAlertsRoutes.PUT("/Alert/status/bulk/:id", controllers.UpdateAlertStatusBulk(db)) // update webpage status by id (bulk)
+			analyticalAlertsRoutes.PUT("/Alert/status/bulk/:id", controllers.UpdateAlertStatusBulk(db)) // update webpage status by id (bulk)
 			//
 			analyticalAlertsRoutes.DELETE("/Alert/:id", controllers.DeleteAlertByID(db))          // delete webpage by ID
 			analyticalAlertsRoutes.DELETE("/Alert/bulk/:id", controllers.DeleteAlertByIDBulk(db)) // delete webpage by ID (bulk)

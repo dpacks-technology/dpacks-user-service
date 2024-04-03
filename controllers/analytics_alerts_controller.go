@@ -205,7 +205,7 @@ func GetAlertbyId(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// Query the database for a single record
-		row := db.QueryRow("SELECT * FROM useralerts WHERE id = $1", id)
+		row := db.QueryRow("SELECT id,alert_threshold,alert_subject,alert_content,when_alert_required,repeat_on,status,website_id FROM useralerts WHERE id = $1", id)
 
 		// Create a WebpageModel to hold the data
 		var alert models.UserAlertsShow

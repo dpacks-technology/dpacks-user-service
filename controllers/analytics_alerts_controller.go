@@ -22,7 +22,7 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 		}
 
 		//print the model alert
-		fmt.Printf("test %s", alert.AlertSubject)
+		//fmt.Printf("test %s", alert)
 
 		// query to insert the webpage
 		query := "INSERT INTO useralerts (alert_threshold, alert_subject,alert_content,when_alert_required,repeat_on,website_id) VALUES ($1, $2, $3, $4,$5,$6)"

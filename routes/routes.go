@@ -80,6 +80,11 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
 		{
 			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+
+			analyticalAlertsRoutes.GET("/source/:id", controllers.GetSource(db))
+			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
+			//analyticalAlertsRoutes.GET("/devices", controllers.GetDevices(db))
+			//analyticalAlertsRoutes.GET("/country", controllers.GetCountry(db))
 		}
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group

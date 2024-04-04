@@ -49,3 +49,65 @@ func GetAnalyticalAlerts(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
+func GetSource(db *sql.DB) gin.HandlerFunc {
+	// Return a handler function
+	return func(c *gin.Context) {
+		// Get the website ID from the URL params
+		websiteID := c.Param("id")
+
+		// Execute the SQL query
+		rows, err := db.Query(`
+            SELECT
+                src.type AS user_source,
+                COUNT(*) AS user_count
+            FROM
+                public.sessions AS s
+            JOIN
+                public.source AS src ON s.source_id = src.id
+            WHERE
+                s.web_id = $1
+            GROUP BY
+                s.web_id,
+                src.type
+            ORDER BY
+                s.web_id,
+                user_count DESC;
+        `, websiteID)
+		if err != nil {
+			// Handle any errors
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
+			return
+		}
+		defer rows.Close()
+
+		// Iterate over the result set
+		var results []gin.H
+		for rows.Next() {
+			var userSource string
+			var userCount int
+			if err := rows.Scan(&userSource, &userCount); err != nil {
+				fmt.Printf("%s\n", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning database rows"})
+				return
+			}
+			// Append the result to the results slice
+			results = append(results, gin.H{"user_source": userSource, "user_count": userCount})
+		}
+
+		// Return the results as JSON
+		c.JSON(http.StatusOK, results)
+	}
+}
+
+func GetSessions(db *sql.DB) gin.HandlerFunc {
+
+}
+
+//func GetDevices(db *sql.DB) gin.HandlerFunc {
+//
+//}
+//
+//func GetCountry(db *sql.DB) gin.HandlerFunc {
+//
+//}

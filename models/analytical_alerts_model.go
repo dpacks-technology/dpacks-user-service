@@ -23,3 +23,11 @@ type CreateNewUserAlert struct {
 	RepeatOn          string `json:"Repeat" db:"repeat_on"`
 	WebsiteeId        string `json:"webId" db:"website_id"`
 }
+
+type UpdateUserAlert struct {
+	AlertThreshold    int    `json:"Threshold" db:"alert_threshold"`
+	AlertSubject      string `json:"Subject" db:"alert_subject"`
+	AlertContent      string `json:"Content" db:"alert_content"`
+	WhenAlertRequired string `json:"AlertOn" db:"when_alert_required"`
+	RepeatOn          string `json:"Repeat" db:"repeat_on"`
+}

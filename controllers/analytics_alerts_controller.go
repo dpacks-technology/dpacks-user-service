@@ -586,3 +586,37 @@ func UpdateAlertStatusBulk(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
+
+func EditAlert(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("id")
+
+		// get the JSON data - only the name
+		var updateAlert models.UpdateUserAlert
+		if err := c.ShouldBindJSON(&updateAlert); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		fmt.Printf("test %s", updateAlert)
+
+		// Validate the webpage data
+		//if err := validators.ValidateName(webpage, false); err != nil {
+		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		//	return
+		//}
+
+		// Update the webpage in the database
+		_, err := db.Exec("UPDATE useralerts SET alert_threshold=$1,alert_subject=$2,alert_content=$3,when_alert_required=$4,repeat_on=$5 where id=$6", updateAlert.AlertThreshold, updateAlert.AlertSubject, updateAlert.AlertContent, updateAlert.WhenAlertRequired, updateAlert.RepeatOn, id)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+
+	}
+}

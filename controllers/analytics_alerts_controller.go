@@ -21,8 +21,11 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		//print the model alert
+		fmt.Printf("test %s", alert.AlertSubject)
+
 		// query to insert the webpage
-		query := "INSERT INTO useralert (alert_threshold, alert_subject,alert_content,when_alert_required,repeat_on,website_id) VALUES ($1, $2, $3, $4,$5,$6)"
+		query := "INSERT INTO useralerts (alert_threshold, alert_subject,alert_content,when_alert_required,repeat_on,website_id) VALUES ($1, $2, $3, $4,$5,$6)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -31,12 +34,16 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		fmt.Printf("test3")
+
 		// Execute the prepared statement with bound parameters
 		_, err = stmt.Exec(alert.AlertThreshold, alert.AlertSubject, alert.AlertContent, alert.WhenAlertRequired, alert.RepeatOn, alert.WebsiteeId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
+
+		fmt.Printf("test4")
 
 		// Return a success message
 		c.JSON(http.StatusCreated, gin.H{"message": "Alert set Succesfully"})
@@ -124,7 +131,6 @@ func GetAllAlert(db *sql.DB) gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			fmt.Printf("%s\n", alert)
 			alerts = append(alerts, alert)
 		}
 

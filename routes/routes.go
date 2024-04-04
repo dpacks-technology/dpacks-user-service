@@ -77,7 +77,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		BillingRoutes := api.Group("/billing") // web api group
 		{
-			//webRoutes.POST("/webpage", controllers.AddWebPage(db)) // add webpage
+			BillingRoutes.POST("/transactions", controllers.AddTransaction(db)) // add transaction
 
 			BillingRoutes.GET("/transactions/:count/:page", controllers.GetTransactions(db))                 // get all transactions
 			BillingRoutes.GET("/transaction/:id", controllers.GetTansactionsById(db))                        // get a transactions by id

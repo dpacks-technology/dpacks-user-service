@@ -1,13 +1,27 @@
 package models
 
+import "time"
+
 type TransactionsModel struct {
-	TransactionID   int     `json:"id"`
-	UserID          int     `json:"user_id"`
-	PlanID          int     `json:"plan_id"`
-	Amount          float64 `json:"amount"`
-	TransactionDate string  `json:"transaction_date"`
-	Status          int     `json:"status"`
-	PlanName        string  `json:"plan_name"`
-	Email           string  `json:"email"`
-	Phone           int     `json:"phone"`
+	TransactionID   int       `json:"id"`
+	UserID          int       `json:"user_id"`
+	PlanID          int       `json:"plan_id"`
+	PlanName        string    `json:"plan_name"`
+	Amount          float64   `json:"amount"`
+	CompanyName     string    `json:"company_name"`
+	StreetNo        string    `json:"street_no"`
+	City            string    `json:"city"`
+	PostalCode      string    `json:"postal_code"`
+	Country         string    `json:"country"`
+	Email           string    `json:"email"`
+	PaymentMethod   string    `json:"payment_method"`
+	GivenName       string    `json:"given_name"`
+	LastName        string    `json:"last_name"`
+	Month           int       `json:"month"`
+	Year            int       `json:"year"`
+	CVV             int       `json:"cvv"`
+	Terms           bool      `json:"terms"`
+	TransactionDate time.Time `json:"transaction_date"`
+	Status          int       `json:"status"`
+	CardNumber      int       `json:"card_number"`
 }

@@ -109,7 +109,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 
 			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db))
-			
+
 			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))
 			rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))
 			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))

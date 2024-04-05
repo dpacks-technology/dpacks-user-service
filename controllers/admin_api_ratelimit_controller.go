@@ -424,7 +424,7 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Status, &ratelimit.CreatedOn, &ratelimit.Limit); err != nil {
+			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

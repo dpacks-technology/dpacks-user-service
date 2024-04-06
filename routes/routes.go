@@ -83,8 +83,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			analyticalAlertsRoutes.GET("/source/:id", controllers.GetSource(db))
 			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
-			//analyticalAlertsRoutes.GET("/devices", controllers.GetDevices(db))
-			//analyticalAlertsRoutes.GET("/country", controllers.GetCountry(db))
+			analyticalAlertsRoutes.GET("/devices/:id", controllers.GetDevices(db))
+			analyticalAlertsRoutes.GET("/country/:id", controllers.GetCountry(db))
 		}
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group

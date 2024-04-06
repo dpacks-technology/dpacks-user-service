@@ -63,18 +63,18 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
 		{
-			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db)) // add webpage
+			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db))
 
 			apiSubscribersRoutes.GET("/subscribers/:count/:page", controllers.GetApiSubscribers(db))
-			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db))                           // get a webpage by id
-			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetApiSubscribersByDatetime(db)) // get all webpages by datetime
-			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetApiSubscribersByDatetimeCount(db))   // get all webpages by datetime
-			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))                      // get all webpages count
+			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db))
+			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetApiSubscribersByDatetime(db))
+			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetApiSubscribersByDatetimeCount(db))
+			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))
 
-			apiSubscribersRoutes.PUT("/subscriber/:id", controllers.RegenerateKey(db)) // edit webpage by id
+			apiSubscribersRoutes.PUT("/subscriber/:id", controllers.RegenerateKey(db))
 
-			apiSubscribersRoutes.DELETE("/subscriber/:id", controllers.DeleteApiSubscriberByID(db))          // delete webpage by ID
-			apiSubscribersRoutes.DELETE("/subscriber/bulk/:id", controllers.DeleteApiSubscriberByIDBulk(db)) // delete webpage by ID (bulk)
+			apiSubscribersRoutes.DELETE("/subscriber/:id", controllers.DeleteApiSubscriberByID(db))
+			apiSubscribersRoutes.DELETE("/subscriber/bulk/:id", controllers.DeleteApiSubscriberByIDBulk(db))
 
 		}
 

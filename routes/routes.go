@@ -31,6 +31,12 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		webRoutes := api.Group("/web") // web api group
 		{
+			webRoutes.POST("/site", controllers.AddSite(db))          // add site
+			webRoutes.GET("/sites", controllers.ReadSites(db))        // read all sites
+			webRoutes.GET("/site/:id", controllers.GetSiteById(db))   // read site by id
+			webRoutes.PUT("/site/:id", controllers.EditSite(db))      // edit site by id
+			webRoutes.DELETE("/site/:id", controllers.DeleteSite(db)) // delete site by id
+
 			webRoutes.POST("/webpage", controllers.AddWebPage(db)) // add webpage
 
 			webRoutes.GET("/webpages/:count/:page", controllers.GetWebPages(db))                    // get all webpages
@@ -57,18 +63,18 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
 		{
-			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db)) // add webpage
+			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db))
 
 			apiSubscribersRoutes.GET("/subscribers/:count/:page", controllers.GetApiSubscribers(db))
-			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db))                           // get a webpage by id
-			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetApiSubscribersByDatetime(db)) // get all webpages by datetime
-			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetApiSubscribersByDatetimeCount(db))   // get all webpages by datetime
-			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))                      // get all webpages count
+			apiSubscribersRoutes.GET("/subscriber/:id", controllers.GetApiSubscriberById(db))
+			apiSubscribersRoutes.GET("/subscribers/datetime/:count/:page", controllers.GetApiSubscribersByDatetime(db))
+			apiSubscribersRoutes.GET("/subscribers/datetime/count", controllers.GetApiSubscribersByDatetimeCount(db))
+			apiSubscribersRoutes.GET("/subscribers/count", controllers.GetApiSubscribersCount(db))
 
-			apiSubscribersRoutes.PUT("/subscriber/:id", controllers.RegenerateKey(db)) // edit webpage by id
+			apiSubscribersRoutes.PUT("/subscriber/:id", controllers.RegenerateKey(db))
 
-			apiSubscribersRoutes.DELETE("/subscriber/:id", controllers.DeleteApiSubscriberByID(db))          // delete webpage by ID
-			apiSubscribersRoutes.DELETE("/subscriber/bulk/:id", controllers.DeleteApiSubscriberByIDBulk(db)) // delete webpage by ID (bulk)
+			apiSubscribersRoutes.DELETE("/subscriber/:id", controllers.DeleteApiSubscriberByID(db))
+			apiSubscribersRoutes.DELETE("/subscriber/bulk/:id", controllers.DeleteApiSubscriberByIDBulk(db))
 
 		}
 
@@ -108,22 +114,22 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
-			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db)) // add webpage
+			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db))
 
-			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))                    // get all webpages
-			rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))                           // get a webpage by id
-			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))     // get all webpages by status
-			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))       // get all webpages by status
-			rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db)) // get all webpages by datetime
-			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))   // get all webpages by datetime
-			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))                       // get all webpages count
+			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))
+			rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))
+			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))
+			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))
+			rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db))
+			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))
+			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))
 
-			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))          // update webpage status by id
-			rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))                         // edit webpage by id
-			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db)) // update webpage status by id (bulk)
-			//
-			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))          // delete webpage by ID
-			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db)) // delete webpage by ID (bulk)
+			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))
+			rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))
+			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db))
+
+			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))
+			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db))
 		}
 
 		webContentRoutes := api.Group("/webcontent")

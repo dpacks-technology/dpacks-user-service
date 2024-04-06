@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AddSubscribers handles POST /api/web/webpages - CREATE
+// AddSubscribers
 func AddSubscribers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -23,7 +23,7 @@ func AddSubscribers(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Validate the webpage data
+		// Validate the subscriber data
 		if err := validators.ValidateUserId(keypair, true); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -32,7 +32,7 @@ func AddSubscribers(db *sql.DB) gin.HandlerFunc {
 		keypair.ClientID = generateUniqueID()
 		keypair.Key = generateUniqueID()
 
-		// query to insert the webpage
+		// query to insert the keypair
 		query := "INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)"
 
 		// Prepare the statement
@@ -55,7 +55,7 @@ func AddSubscribers(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// GetApiSubscribers handles GET /api/web/pages/ - READ
+// GetApiSubscribers
 func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -126,7 +126,7 @@ func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
+		// Iterate over the rows and scan them into KeypairModel structs
 		var keypairs []models.KeyPairs
 
 		for rows.Next() {
@@ -146,13 +146,13 @@ func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
+		// Return all subscriber as JSON
 		c.JSON(http.StatusOK, keypairs)
 
 	}
 }
 
-// GetWebPageById handles GET /api/web/webpages/:id - READ
+// GetApiSubscriberById
 func GetApiSubscriberById(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -162,10 +162,10 @@ func GetApiSubscriberById(db *sql.DB) gin.HandlerFunc {
 		// Query the database for a single record
 		row := db.QueryRow("SELECT * FROM keypairs WHERE id = $1", id)
 
-		// Create a WebpageModel to hold the data
+		// Create a KeypairModel to hold the data
 		var keypair models.KeyPairs
 
-		// Scan the row data into the WebpageModel
+		// Scan the row data into the KeypairModel
 		err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn)
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -173,13 +173,13 @@ func GetApiSubscriberById(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return the webpage as JSON
+		// Return the Keypair as JSON
 		c.JSON(http.StatusOK, keypair)
 
 	}
 }
 
-// // GetWebPagesByDatetime handles GET /api/web/webpages/datetime/:count/:page - READ
+// GetApiSubscribersByDatetime
 func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -256,7 +256,7 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
+		// Iterate over the rows and scan them into KeypairModel structs
 		var keypairs []models.KeyPairs
 
 		for rows.Next() {
@@ -276,13 +276,13 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
+		// Return all keypair as JSON
 		c.JSON(http.StatusOK, keypairs)
 
 	}
 }
 
-// GetWebPagesByDatetimeCount handles GET /api/web/webpages/datetime/count - READ
+// GetApiSubscribersByDatetimeCount
 func GetApiSubscribersByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -336,12 +336,12 @@ func GetApiSubscribersByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
-		// Return all webpages as JSON
 		c.JSON(http.StatusOK, count)
 
 	}
 }
 
+// GetApiSubscribersCount
 func GetApiSubscribersCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -388,13 +388,12 @@ func GetApiSubscribersCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
-		// Return all webpages as JSON
 		c.JSON(http.StatusOK, count)
 
 	}
 }
 
-// EditWebPage handles PUT /api/web/webpages/:id - UPDATE
+// RegenerateKey
 func RegenerateKey(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -407,7 +406,7 @@ func RegenerateKey(db *sql.DB) gin.HandlerFunc {
 		keypair.ClientID = generateUniqueID()
 		keypair.Key = generateUniqueID()
 
-		// Update the webpage in the database
+		// Update the keypair in the database
 		_, err := db.Exec("UPDATE keypairs SET client_id = $1,key = $2  WHERE id = $3", keypair.ClientID, keypair.Key, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -415,19 +414,19 @@ func RegenerateKey(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Keypair updated successfully"})
 
 	}
 }
 
-// DeleteWebPageByID handles DELETE /api/web/webpages/:id - DELETE
+// DeleteApiSubscriberByID
 func DeleteApiSubscriberByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
-		// query to delete the webpage
+		// query to delete the Keypair
 		query := "DELETE FROM keypairs WHERE id = $1"
 
 		// Prepare the statement
@@ -445,12 +444,12 @@ func DeleteApiSubscriberByID(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Keypair deleted successfully"})
 
 	}
 }
 
-// DeleteWebPageByIDBulk handles DELETE /api/web/webpages/bulk/:id - DELETE
+// DeleteApiSubscriberByIDBulk
 func DeleteApiSubscriberByIDBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -460,9 +459,9 @@ func DeleteApiSubscriberByIDBulk(db *sql.DB) gin.HandlerFunc {
 		// Convert the string of ids to an array of ids
 		ids := strings.Split(id, ",")
 
-		// Delete the webpage from the database
+		// Delete the keypair from the database
 		for _, id := range ids {
-			// query to delete the webpage
+			// query to delete the Keypair
 			query := "DELETE FROM keypairs WHERE id = $1"
 
 			// Prepare the statement
@@ -481,7 +480,7 @@ func DeleteApiSubscriberByIDBulk(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Keypair bulk deleted successfully"})
 
 	}
 }

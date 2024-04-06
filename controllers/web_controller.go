@@ -24,7 +24,7 @@ func AddWebPage(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Validate the webpage data
-		if err := validators.ValidateName(webpage, true); err != nil {
+		if err := validators.ValidateWebpage(webpage, true); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -584,7 +584,7 @@ func EditWebPage(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Validate the webpage data
-		if err := validators.ValidateName(webpage, false); err != nil {
+		if err := validators.ValidateWebpage(webpage, false); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

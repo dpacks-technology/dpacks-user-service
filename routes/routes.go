@@ -42,22 +42,22 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		adminUserRoutes := api.Group("/admin_user") // admin user api group
 		{
-			adminUserRoutes.POST("/admin", controllers.AddWebPage(db)) // add webpage
+			adminUserRoutes.POST("/addAdmin", controllers.AddAdminUser(db)) // add admin
 
-			adminUserRoutes.GET("/admins/:count/:page", controllers.GetAdmins(db))                      // get all webpages
-			adminUserRoutes.GET("/admin/:id", controllers.GetAdminById(db))                             // get a webpage by id
-			adminUserRoutes.GET("/admins/status/:count/:page", controllers.GetWebPagesByStatus(db))     // get all webpages by status
-			adminUserRoutes.GET("/admins/status/count", controllers.GetWebPagesByStatusCount(db))       // get all webpages by status
-			adminUserRoutes.GET("/admins/datetime/:count/:page", controllers.GetWebPagesByDatetime(db)) // get all webpages by datetime
-			adminUserRoutes.GET("/admins/datetime/count", controllers.GetWebPagesByDatetimeCount(db))   // get all webpages by datetime
-			adminUserRoutes.GET("/admins/count", controllers.GetAdminsCount(db))                        // get all webpages count
+			adminUserRoutes.GET("/admins/:count/:page", controllers.GetAdmins(db))                    // get all admins
+			adminUserRoutes.GET("/admin/:id", controllers.GetAdminById(db))                           // get a admin by id
+			adminUserRoutes.GET("/admins/status/:count/:page", controllers.GetAdminsByStatus(db))     // get all admins by status
+			adminUserRoutes.GET("/admins/status/count", controllers.GetAdminsByStatusCount(db))       // get all admins by status
+			adminUserRoutes.GET("/admins/datetime/:count/:page", controllers.GetAdminsByDatetime(db)) // get all admins by datetime
+			adminUserRoutes.GET("/admins/datetime/count", controllers.GetAdminsByDatetimeCount(db))   // get all admins by datetime count
+			adminUserRoutes.GET("/admins/count", controllers.GetAdminsCount(db))                      // get all admins count
 
-			adminUserRoutes.PUT("/admins/status/:id", controllers.UpdateWebPageStatus(db))          // update webpage status by id
-			adminUserRoutes.PUT("/admins/:id", controllers.EditAdmin(db))                           // edit webpage by id
-			adminUserRoutes.PUT("/admins/status/bulk/:id", controllers.UpdateWebPageStatusBulk(db)) // update webpage status by id (bulk)
+			adminUserRoutes.PUT("/admins/status/:id", controllers.UpdateAdminStatus(db))          // update admin status by id
+			adminUserRoutes.PUT("/admins/:id", controllers.EditAdmin(db))                         // edit admin by id
+			adminUserRoutes.PUT("/admins/status/bulk/:id", controllers.UpdateAdminStatusBulk(db)) // update admin status by id (bulk)
 
-			adminUserRoutes.DELETE("/admins/:id", controllers.DeleteAdminByID(db))            // delete webpage by ID
-			adminUserRoutes.DELETE("/admins/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
+			adminUserRoutes.DELETE("/admins/:id", controllers.DeleteAdminByID(db))          // delete admin by ID
+			adminUserRoutes.DELETE("/admins/bulk/:id", controllers.DeleteAdminByIDBulk(db)) // delete admin by ID (bulk)
 		}
 
 		autoRespondRoutes := api.Group("/auto_respond") // auto respond api group

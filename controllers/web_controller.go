@@ -3,7 +3,6 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
-	"dpacks-go-services-template/utils"
 	"dpacks-go-services-template/validators"
 	"fmt"
 	"net/http"
@@ -168,12 +167,6 @@ func GetWebPageById(db *sql.DB) gin.HandlerFunc {
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
-			return
-		}
-
-		err = utils.SendEmail("sathnidukottage@gmail.com", "Test subject", "Test message", "sm")
-		if err != nil {
-			fmt.Printf("%s\n", err)
 			return
 		}
 

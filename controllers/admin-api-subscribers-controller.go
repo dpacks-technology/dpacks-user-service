@@ -17,23 +17,23 @@ func AddSubscribers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get the JSON data
-		var keypair models.KeyPairs
-		if err := c.ShouldBindJSON(&keypair); err != nil {
+		var subscriber models.ApiSubscriber
+		if err := c.ShouldBindJSON(&subscriber); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Validate the subscriber data
-		if err := validators.ValidateUserId(keypair, true); err != nil {
+		if err := validators.ValidateUserId(subscriber, true); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		keypair.ClientID = generateUniqueID()
-		keypair.Key = generateUniqueID()
+		subscriber.ClientID = generateUniqueID()
+		subscriber.Key = generateUniqueID()
 
 		// query to insert the keypair
-		query := "INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)"
+		query := "INSERT INTO api_subscribers (user_id, client_id, key) VALUES ($1, $2, $3)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -43,7 +43,7 @@ func AddSubscribers(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(keypair.UserID, keypair.ClientID, keypair.Key)
+		_, err = stmt.Exec(subscriber.UserID, subscriber.ClientID, subscriber.Key)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -91,19 +91,19 @@ func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM keypairs ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM api_subscribers ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM keypairs WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_subscribers WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "user_id":
-				query = "SELECT * FROM keypairs WHERE user_id LIKE $3 ORDER BY CASE WHEN user_id = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_subscribers WHERE user_id LIKE $3 ORDER BY CASE WHEN user_id = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			case "client_id":
-				query = "SELECT * FROM keypairs WHERE client_id LIKE $3 ORDER BY CASE WHEN client_id = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_subscribers WHERE client_id LIKE $3 ORDER BY CASE WHEN client_id = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -127,16 +127,16 @@ func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into KeypairModel structs
-		var keypairs []models.KeyPairs
+		var subscribers []models.ApiSubscriber
 
 		for rows.Next() {
-			var keypair models.KeyPairs
-			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn); err != nil {
+			var subscriber models.ApiSubscriber
+			if err := rows.Scan(&subscriber.ID, &subscriber.UserID, &subscriber.ClientID, &subscriber.Key, &subscriber.CreatedOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			keypairs = append(keypairs, keypair)
+			subscribers = append(subscribers, subscriber)
 		}
 
 		//this runs only when loop didn't work
@@ -147,7 +147,7 @@ func GetApiSubscribers(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all subscriber as JSON
-		c.JSON(http.StatusOK, keypairs)
+		c.JSON(http.StatusOK, subscribers)
 
 	}
 }
@@ -160,13 +160,13 @@ func GetApiSubscriberById(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// Query the database for a single record
-		row := db.QueryRow("SELECT * FROM keypairs WHERE id = $1", id)
+		row := db.QueryRow("SELECT * FROM api_subscribers WHERE id = $1", id)
 
 		// Create a KeypairModel to hold the data
-		var keypair models.KeyPairs
+		var subscriber models.ApiSubscriber
 
 		// Scan the row data into the KeypairModel
-		err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn)
+		err := row.Scan(&subscriber.ID, &subscriber.UserID, &subscriber.ClientID, &subscriber.Key, &subscriber.CreatedOn)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
@@ -174,7 +174,7 @@ func GetApiSubscriberById(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return the Keypair as JSON
-		c.JSON(http.StatusOK, keypair)
+		c.JSON(http.StatusOK, subscriber)
 
 	}
 }
@@ -216,11 +216,11 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM keypairs ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM api_subscribers ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT * FROM keypairs WHERE created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM api_subscribers WHERE created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, start, end)
 		}
 
@@ -228,13 +228,13 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT * FROM keypairs WHERE id = $5 AND created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_subscribers WHERE id = $5 AND created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "user_id":
-				query = "SELECT * FROM keypairs WHERE user_id LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN user_id = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_subscribers WHERE user_id LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN user_id = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			case "client_id":
-				query = "SELECT * FROM keypairs WHERE client_id LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN client_id = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_subscribers WHERE client_id LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN client_id = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -257,16 +257,16 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into KeypairModel structs
-		var keypairs []models.KeyPairs
+		var subscribers []models.ApiSubscriber
 
 		for rows.Next() {
-			var keypair models.KeyPairs
-			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn); err != nil {
+			var subscriber models.ApiSubscriber
+			if err := rows.Scan(&subscriber.ID, &subscriber.UserID, &subscriber.ClientID, &subscriber.Key, &subscriber.CreatedOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			keypairs = append(keypairs, keypair)
+			subscribers = append(subscribers, subscriber)
 		}
 
 		//this runs only when loop didn't work
@@ -277,7 +277,7 @@ func GetApiSubscribersByDatetime(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all keypair as JSON
-		c.JSON(http.StatusOK, keypairs)
+		c.JSON(http.StatusOK, subscribers)
 
 	}
 }
@@ -295,10 +295,10 @@ func GetApiSubscribersByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM keypairs"
+		query = "SELECT COUNT(*) FROM api_subscribers"
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT COUNT(*) FROM keypairs WHERE created_on BETWEEN $1 AND $2"
+			query = "SELECT COUNT(*) FROM api_subscribers WHERE created_on BETWEEN $1 AND $2"
 			args = append(args, start, end)
 		}
 
@@ -306,13 +306,13 @@ func GetApiSubscribersByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM keypairs WHERE id = $3 AND created_on BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM api_subscribers WHERE id = $3 AND created_on BETWEEN $1 AND $2"
 				args = append(args, val)
 			case "user_id":
-				query = "SELECT COUNT(*) FROM keypairs WHERE user_id LIKE $3 AND created_on BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM api_subscribers WHERE user_id LIKE $3 AND created_on BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			case "client_id":
-				query = "SELECT COUNT(*) FROM keypairs WHERE client_id LIKE $3 AND created_on BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM api_subscribers WHERE client_id LIKE $3 AND created_on BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -355,18 +355,18 @@ func GetApiSubscribersCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT COUNT(*) FROM keypairs"
+		query := "SELECT COUNT(*) FROM api_subscribers"
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM keypairs WHERE id = $1"
+				query = "SELECT COUNT(*) FROM api_subscribers WHERE id = $1"
 				args = append(args, val)
 			case "client_id":
-				query = "SELECT COUNT(*) FROM keypairs WHERE client_id LIKE $1"
+				query = "SELECT COUNT(*) FROM api_subscribers WHERE client_id LIKE $1"
 				args = append(args, escapedVal)
 			case "user_id":
-				query = "SELECT COUNT(*) FROM keypairs WHERE user_id LIKE $1"
+				query = "SELECT COUNT(*) FROM api_subscribers WHERE user_id LIKE $1"
 				args = append(args, escapedVal)
 			}
 		}
@@ -401,13 +401,13 @@ func RegenerateKey(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// get the JSON data - only the name
-		var keypair models.KeyPairs
+		var subscriber models.ApiSubscriber
 
-		keypair.ClientID = generateUniqueID()
-		keypair.Key = generateUniqueID()
+		subscriber.ClientID = generateUniqueID()
+		subscriber.Key = generateUniqueID()
 
 		// Update the keypair in the database
-		_, err := db.Exec("UPDATE keypairs SET client_id = $1,key = $2  WHERE id = $3", keypair.ClientID, keypair.Key, id)
+		_, err := db.Exec("UPDATE api_subscribers SET client_id = $1,key = $2  WHERE id = $3", subscriber.ClientID, subscriber.Key, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -427,7 +427,7 @@ func DeleteApiSubscriberByID(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// query to delete the Keypair
-		query := "DELETE FROM keypairs WHERE id = $1"
+		query := "DELETE FROM api_subscribers WHERE id = $1"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -462,7 +462,7 @@ func DeleteApiSubscriberByIDBulk(db *sql.DB) gin.HandlerFunc {
 		// Delete the keypair from the database
 		for _, id := range ids {
 			// query to delete the Keypair
-			query := "DELETE FROM keypairs WHERE id = $1"
+			query := "DELETE FROM api_subscribers WHERE id = $1"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)

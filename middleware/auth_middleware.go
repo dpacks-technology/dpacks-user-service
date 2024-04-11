@@ -20,7 +20,7 @@ func AuthMiddleware(db *sql.DB) gin.HandlerFunc {
 
 		// Query the database to check if the provided API key and client ID are valid
 		var userID int
-		err := db.QueryRow("SELECT user_id FROM keypairs WHERE key = $1 AND client_id = $2", apiKey, clientID).Scan(&userID)
+		err := db.QueryRow("SELECT user_id FROM api_subscribers WHERE key = $1 AND client_id = $2", apiKey, clientID).Scan(&userID)
 		if err != nil {
 			// Invalid API key or client ID
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key or Client ID"})

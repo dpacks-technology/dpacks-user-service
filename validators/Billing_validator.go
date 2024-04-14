@@ -43,10 +43,6 @@ func ValidateNames(transaction models.TransactionsModel, create bool) error {
 		return errors.New("CardNumber cannot be empty")
 	}
 
-	if transaction.Amount == 0 {
-		return errors.New("Amount cannot be empty")
-	}
-
 	if transaction.Terms == true {
 		return errors.New("Terms cannot be empty")
 	}

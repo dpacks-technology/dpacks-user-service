@@ -5,9 +5,6 @@ import "time"
 type TransactionsModel struct {
 	TransactionID   int       `json:"id"`
 	UserID          int       `json:"user_id"`
-	PlanID          int       `json:"plan_id"`
-	PlanName        string    `json:"plan_name"`
-	Amount          float64   `json:"amount"`
 	CompanyName     string    `json:"company_name"`
 	StreetNo        string    `json:"street_no"`
 	City            string    `json:"city"`

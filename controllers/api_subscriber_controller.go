@@ -15,7 +15,7 @@ func GetKeyPairs(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Query the database for all records
-		query := "SELECT * FROM keypairs"
+		query := "SELECT * FROM api_subscribers"
 
 		//prepare statement
 		stmt, err := db.Prepare(query)
@@ -38,16 +38,16 @@ func GetKeyPairs(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into KeyPairs structs
-		var keypairs []models.KeyPairs
+		var subscribers []models.ApiSubscriber
 
 		for rows.Next() {
-			var keypair models.KeyPairs
-			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn); err != nil {
+			var subscriber models.ApiSubscriber
+			if err := rows.Scan(&subscriber.ID, &subscriber.UserID, &subscriber.ClientID, &subscriber.Key, &subscriber.CreatedOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			keypairs = append(keypairs, keypair)
+			subscribers = append(subscribers, subscriber)
 		}
 
 		//this runs only when loop didn't work
@@ -58,7 +58,7 @@ func GetKeyPairs(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all keypairs as JSON
-		c.JSON(http.StatusOK, keypairs)
+		c.JSON(http.StatusOK, subscribers)
 
 	}
 }
@@ -70,10 +70,10 @@ func GetKeyPairsID(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// Create an empty ExampleModel struct
-		var keypair models.KeyPairs
+		var subscriber models.ApiSubscriber
 
 		//query the database for the record with the given ID
-		query := "SELECT * FROM keypairs WHERE user_id = $1"
+		query := "SELECT * FROM api_subscribers WHERE user_id = $1"
 
 		//prepare statement
 		stmt, err := db.Prepare(query)
@@ -99,7 +99,7 @@ func GetKeyPairsID(db *sql.DB) gin.HandlerFunc {
 
 		// Iterate over the rows and scan them into KeyPairs structs
 		for row.Next() {
-			if err := row.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key, &keypair.CreatedOn); err != nil {
+			if err := row.Scan(&subscriber.ID, &subscriber.UserID, &subscriber.ClientID, &subscriber.Key, &subscriber.CreatedOn); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -107,7 +107,7 @@ func GetKeyPairsID(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return the example as JSON
-		c.JSON(http.StatusOK, keypair)
+		c.JSON(http.StatusOK, subscriber)
 
 	}
 }
@@ -123,22 +123,14 @@ func AddKeyPair(db *sql.DB) gin.HandlerFunc {
 		key := generateUniqueID()
 
 		// Create a KeyPairs instance with generated IDs and user ID
-		keypair := models.KeyPairs{
+		subscriber := models.ApiSubscriber{
 			UserID:   userId,
 			ClientID: clientID,
 			Key:      key,
 		}
 
-		// Insert the record into the database
-		//_, err := db.Exec("INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)", keypair.UserID, keypair.ClientID, keypair.Key)
-		//if err != nil {
-		//	fmt.Printf("%s\n", err)
-		//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
-		//	return
-		//}
-
 		//query to insert the record into the database
-		query := "INSERT INTO keypairs (user_id, client_id, key) VALUES ($1, $2, $3)"
+		query := "INSERT INTO api_subscribers (user_id, client_id, key) VALUES ($1, $2, $3)"
 
 		//prepare statement
 		stmt, err := db.Prepare(query)
@@ -151,7 +143,7 @@ func AddKeyPair(db *sql.DB) gin.HandlerFunc {
 		defer stmt.Close()
 
 		//execute the statement
-		_, err = stmt.Exec(keypair.UserID, keypair.ClientID, keypair.Key)
+		_, err = stmt.Exec(subscriber.UserID, subscriber.ClientID, subscriber.Key)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
@@ -159,7 +151,7 @@ func AddKeyPair(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return the example as JSON
-		c.JSON(http.StatusOK, keypair)
+		c.JSON(http.StatusOK, subscriber)
 
 	}
 }
@@ -174,21 +166,14 @@ func UpdateKeyPair(db *sql.DB) gin.HandlerFunc {
 		key := generateUniqueID()
 
 		// Create a KeyPairs instance with generated IDs and user ID
-		keypair := models.KeyPairs{
+		subscriber := models.ApiSubscriber{
 			UserID:   userId,
 			ClientID: clientID,
 			Key:      key,
 		}
 
-		//_, err := db.Exec("UPDATE keypairs SET client_id = $1, key = $2 WHERE user_id=$3", keypair.ClientID, keypair.Key, userId)
-		//if err != nil {
-		//	fmt.Printf("%s\n", err)
-		//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error in data Update"})
-		//	return
-		//}
-
 		//query to update the record in the database
-		query := "UPDATE keypairs SET client_id = $1, key = $2 WHERE user_id=$3"
+		query := "UPDATE api_subscribers SET client_id = $1, key = $2 WHERE user_id=$3"
 
 		//prepare statement
 		stmt, err := db.Prepare(query)
@@ -201,7 +186,7 @@ func UpdateKeyPair(db *sql.DB) gin.HandlerFunc {
 		defer stmt.Close()
 
 		//execute the statement
-		_, err = stmt.Exec(keypair.ClientID, keypair.Key, userId)
+		_, err = stmt.Exec(subscriber.ClientID, subscriber.Key, userId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error in data Update"})
@@ -209,7 +194,7 @@ func UpdateKeyPair(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// return statement
-		c.JSON(http.StatusOK, keypair)
+		c.JSON(http.StatusOK, subscriber)
 	}
 }
 
@@ -219,21 +204,8 @@ func DeleteKeyPair(db *sql.DB) gin.HandlerFunc {
 		// Get the ID from the URL
 		id := c.Param("id")
 
-		//result, err := db.Exec("DELETE FROM keypairs WHERE user_id = $1", id)
-		//if err != nil {
-		//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete examples"})
-		//	return
-		//}
-		//
-		//rowCount, err := result.RowsAffected()
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-		//
-		//fmt.Printf("Deleted %d rows\n", rowCount)
-
 		//query to delete the record from the database
-		query := "DELETE FROM keypairs WHERE user_id = $1"
+		query := "DELETE FROM api_subscribers WHERE user_id = $1"
 
 		//prepare statement
 		stmt, err := db.Prepare(query)

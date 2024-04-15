@@ -1,6 +1,6 @@
 package models
 
-type EndpointRateLimit struct {
+type Endpoint struct {
 	Id        int    `json:"id"`
 	Path      string `json:"path"`
 	Limit     int    `json:"ratelimit"`

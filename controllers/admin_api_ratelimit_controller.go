@@ -17,20 +17,20 @@ func AddRatelimit(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get the JSON data
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var endpoint models.Endpoint
+		if err := c.ShouldBindJSON(&endpoint); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Validate the ratelimit data
-		if err := validators.ValidatePath(ratelimit, true); err != nil {
+		if err := validators.ValidatePath(endpoint, true); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// query to insert the ratelimit
-		query := "INSERT INTO endpoint_ratelimits (path, ratelimit) VALUES ($1, $2)"
+		query := "INSERT INTO api_endpoints (path, ratelimit) VALUES ($1, $2)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -40,7 +40,7 @@ func AddRatelimit(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(ratelimit.Path, ratelimit.Limit)
+		_, err = stmt.Exec(endpoint.Path, endpoint.Limit)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -88,16 +88,16 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM endpoint_ratelimits ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM api_endpoints ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM endpoint_ratelimits WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "path":
-				query = "SELECT * FROM endpoint_ratelimits WHERE path LIKE $3 ORDER BY CASE WHEN path = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE path LIKE $3 ORDER BY CASE WHEN path = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -121,16 +121,16 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into RatelimitModel structs
-		var ratelimits []models.EndpointRateLimit
+		var endpoints []models.Endpoint
 
 		for rows.Next() {
-			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status); err != nil {
+			var endpoint models.Endpoint
+			if err := rows.Scan(&endpoint.Id, &endpoint.Path, &endpoint.Limit, &endpoint.CreatedOn, &endpoint.Status); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			ratelimits = append(ratelimits, ratelimit)
+			endpoints = append(endpoints, endpoint)
 		}
 
 		//this runs only when loop didn't work
@@ -141,7 +141,7 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all ratelimit as JSON
-		c.JSON(http.StatusOK, ratelimits)
+		c.JSON(http.StatusOK, endpoints)
 
 	}
 }
@@ -154,13 +154,13 @@ func GetRatelimitById(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// Query the database for a single record
-		row := db.QueryRow("SELECT * FROM endpoint_ratelimits WHERE id = $1", id)
+		row := db.QueryRow("SELECT * FROM api_endpoints WHERE id = $1", id)
 
 		// Create a ratelimit model to hold the data
-		var ratelimit models.EndpointRateLimit
+		var endpoint models.Endpoint
 
 		// Scan the row data into the RatelimitModel
-		err := row.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status)
+		err := row.Scan(&endpoint.Id, &endpoint.Path, &endpoint.Limit, &endpoint.CreatedOn, &endpoint.Status)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
@@ -168,7 +168,7 @@ func GetRatelimitById(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return the ratelimit as JSON
-		c.JSON(http.StatusOK, ratelimit)
+		c.JSON(http.StatusOK, endpoint)
 
 	}
 }
@@ -187,14 +187,14 @@ func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM endpoint_ratelimits"
+		query = "SELECT COUNT(*) FROM api_endpoints"
 
 		switch statuses {
 		case "1":
-			query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE status IN ($1)"
+			query = "SELECT COUNT(*) FROM api_endpoints WHERE status IN ($1)"
 			args = append(args, 1)
 		case "0":
-			query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE status IN ($1)"
+			query = "SELECT COUNT(*) FROM api_endpoints WHERE status IN ($1)"
 			args = append(args, 0)
 		}
 
@@ -204,10 +204,10 @@ func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE id = $2 AND status IN ($1)"
+				query = "SELECT COUNT(*) FROM api_endpoints WHERE id = $2 AND status IN ($1)"
 				args = append(args, val)
 			case "path":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE path LIKE $2 AND status IN ($1)"
+				query = "SELECT COUNT(*) FROM api_endpoints WHERE path LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
 			}
 		}
@@ -275,15 +275,15 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT * FROM endpoint_ratelimits ORDER BY id LIMIT $1 OFFSET $2"
+		query = "SELECT * FROM api_endpoints ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		switch statuses {
 		case "1":
-			query = "SELECT * FROM endpoint_ratelimits WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM api_endpoints WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, 1)
 		case "0":
-			query = "SELECT * FROM endpoint_ratelimits WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM api_endpoints WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, 0)
 		}
 
@@ -293,11 +293,11 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT * FROM endpoint_ratelimits WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-				query = "SELECT * FROM endpoint_ratelimits WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "path":
-				query = "SELECT * FROM endpoint_ratelimits WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -320,16 +320,16 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into RatelimitModel structs
-		var ratelimits []models.EndpointRateLimit
+		var endpoints []models.Endpoint
 
 		for rows.Next() {
-			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status); err != nil {
+			var endpoint models.Endpoint
+			if err := rows.Scan(&endpoint.Id, &endpoint.Path, &endpoint.Limit, &endpoint.CreatedOn, &endpoint.Status); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			ratelimits = append(ratelimits, ratelimit)
+			endpoints = append(endpoints, endpoint)
 		}
 
 		//this runs only when loop didn't work
@@ -340,7 +340,7 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all ratelimit as JSON
-		c.JSON(http.StatusOK, ratelimits)
+		c.JSON(http.StatusOK, endpoints)
 
 	}
 }
@@ -382,11 +382,11 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM endpoint_ratelimits ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM api_endpoints ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT * FROM endpoint_ratelimits WHERE created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM api_endpoints WHERE created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, start, end)
 		}
 
@@ -394,10 +394,10 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT * FROM endpoint_ratelimits WHERE id = $5 AND created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE id = $5 AND created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "path":
-				query = "SELECT * FROM endpoint_ratelimits WHERE path LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM api_endpoints WHERE path LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -420,16 +420,16 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into RatelimitModel structs
-		var ratelimits []models.EndpointRateLimit
+		var endpoints []models.Endpoint
 
 		for rows.Next() {
-			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status); err != nil {
+			var endpoint models.Endpoint
+			if err := rows.Scan(&endpoint.Id, &endpoint.Path, &endpoint.Limit, &endpoint.CreatedOn, &endpoint.Status); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			ratelimits = append(ratelimits, ratelimit)
+			endpoints = append(endpoints, endpoint)
 		}
 
 		//this runs only when loop didn't work
@@ -440,7 +440,7 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all ratelimit as JSON
-		c.JSON(http.StatusOK, ratelimits)
+		c.JSON(http.StatusOK, endpoints)
 
 	}
 }
@@ -458,10 +458,10 @@ func GetRatelimitsByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM endpoint_ratelimits"
+		query = "SELECT COUNT(*) FROM api_endpoints"
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE created_on BETWEEN $1 AND $2"
+			query = "SELECT COUNT(*) FROM api_endpoints WHERE created_on BETWEEN $1 AND $2"
 			args = append(args, start, end)
 		}
 
@@ -469,10 +469,10 @@ func GetRatelimitsByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE id = $3 AND created_on BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM api_endpoints WHERE id = $3 AND created_on BETWEEN $1 AND $2"
 				args = append(args, val)
 			case "path":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE path LIKE $3 AND created_on BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM api_endpoints WHERE path LIKE $3 AND created_on BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -516,15 +516,15 @@ func GetRateLimitCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT COUNT(*) FROM endpoint_ratelimits"
+		query := "SELECT COUNT(*) FROM api_endpoints"
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE id = $1"
+				query = "SELECT COUNT(*) FROM api_endpoints WHERE id = $1"
 				args = append(args, val)
 			case "path":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE path LIKE $1"
+				query = "SELECT COUNT(*) FROM api_endpoints WHERE path LIKE $1"
 				args = append(args, escapedVal)
 			}
 		}
@@ -560,20 +560,20 @@ func EditRatelimit(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// get the JSON data - only the limit
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var endpoint models.Endpoint
+		if err := c.ShouldBindJSON(&endpoint); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Validate the ratelimit data
-		if err := validators.ValidatePath(ratelimit, false); err != nil {
+		if err := validators.ValidatePath(endpoint, false); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Update the ratelimit in the database
-		_, err := db.Exec("UPDATE endpoint_ratelimits SET ratelimit = $1 WHERE id = $2", ratelimit.Limit, id)
+		_, err := db.Exec("UPDATE api_endpoints SET ratelimit = $1 WHERE id = $2", endpoint.Limit, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -593,7 +593,7 @@ func DeleteRatelimitByID(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// query to delete the endpoint
-		query := "DELETE FROM endpoint_ratelimits WHERE id = $1"
+		query := "DELETE FROM api_endpoints WHERE id = $1"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -628,7 +628,7 @@ func DeleteRatelimitByIDBulk(db *sql.DB) gin.HandlerFunc {
 		// Delete the webpage from the database
 		for _, id := range ids {
 			// query to delete the ratelimit
-			query := "DELETE FROM endpoint_ratelimits WHERE id = $1"
+			query := "DELETE FROM api_endpoints WHERE id = $1"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)
@@ -662,8 +662,8 @@ func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
 		ids := strings.Split(id, ",")
 
 		// get the JSON data - only the status
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var endpoint models.Endpoint
+		if err := c.ShouldBindJSON(&endpoint); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -671,7 +671,7 @@ func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
 		// Update the webpage status in the database
 		for _, id := range ids {
 
-			query := "UPDATE endpoint_ratelimits SET status = $1 WHERE id = $2"
+			query := "UPDATE api_endpoints SET status = $1 WHERE id = $2"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)
@@ -681,7 +681,7 @@ func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
 			}
 
 			// Execute the prepared statement with bound parameters
-			_, err = stmt.Exec(ratelimit.Status, id)
+			_, err = stmt.Exec(endpoint.Status, id)
 			if err != nil {
 				fmt.Printf("%s\n", err)
 				return
@@ -703,14 +703,14 @@ func UpdateRatelimitStatus(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// get the JSON data - only the status
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var endpoint models.Endpoint
+		if err := c.ShouldBindJSON(&endpoint); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// query to update the ratelimit status
-		query := "UPDATE endpoint_ratelimits SET status = $1 WHERE id = $2"
+		query := "UPDATE api_endpoints SET status = $1 WHERE id = $2"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -720,7 +720,7 @@ func UpdateRatelimitStatus(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(ratelimit.Status, id)
+		_, err = stmt.Exec(endpoint.Status, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

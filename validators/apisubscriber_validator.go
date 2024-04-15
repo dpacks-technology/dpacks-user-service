@@ -5,9 +5,9 @@ import (
 	"errors"
 )
 
-func ValidateUserId(kepair models.KeyPairs, create bool) error {
+func ValidateUserId(subscriber models.ApiSubscriber, create bool) error {
 
-	if kepair.UserID == "" {
+	if subscriber.UserID == "" {
 		return errors.New("UserId cannot be empty")
 	}
 

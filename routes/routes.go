@@ -111,6 +111,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
+    
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
@@ -140,5 +141,27 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
+    
+    
+    BillingRoutes := api.Group("/billing") // web api group
+		{
+			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
+
+			BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
+			BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
+			BillingRoutes.GET("/profiles/status/:count/:page", controllers.GetBillingProfileByStatus(db))   // get all transactions by status
+			BillingRoutes.GET("/profiles/status/count", controllers.GetBillingProfileByStatusCount(db))     // get all transactions by status
+			BillingRoutes.GET("/profiles/datetime/:count/:page", controllers.GetBillingProfileDateTime(db)) // get all transactions by datetime
+			BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
+			BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
+
+			BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
+			BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id
+			BillingRoutes.PUT("/profiles/status/bulk/:id", controllers.UpdateBillingProfileStatusBulk(db)) // update transactions status by id (bulk)
+
+			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
+			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
+    }
+    
 	}
 }

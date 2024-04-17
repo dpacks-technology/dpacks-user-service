@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 )
 
-func ValidateName(webpage models.WebpageModel, create bool) error {
+func ValidateWebpage(webpage models.WebpageModel, create bool) error {
 
 	if webpage.Name == "" {
 		return errors.New("name cannot be empty")

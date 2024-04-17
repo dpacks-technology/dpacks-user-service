@@ -96,7 +96,7 @@ func GetBillingProfiles(db *sql.DB) gin.HandlerFunc {
 
 		if val != "" && key != "" {
 			switch key {
-			case "transaction_id":
+			case "id":
 				query = "SELECT * FROM billing_profile WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "status":
@@ -415,9 +415,7 @@ func GetBillingProfileDateTime(db *sql.DB) gin.HandlerFunc {
 			case "status":
 				query = "SELECT * FROM billing_profile WHERE status LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-				//case "path":
-				//	query = "SELECT * FROM billing_profile WHERE path LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				//	args = append(args, escapedVal)
+
 			}
 		}
 
@@ -547,9 +545,7 @@ func GetBillingProfileCount(db *sql.DB) gin.HandlerFunc {
 			case "status":
 				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $1"
 				args = append(args, escapedVal)
-				//case "path":
-				//	query = "SELECT COUNT(*) FROM transactions WHERE path LIKE $1"
-				//	args = append(args, escapedVal)
+
 			}
 		}
 

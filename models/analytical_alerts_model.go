@@ -6,7 +6,6 @@ type UserAlertsShow struct {
 	AlertSubject      string `json:"alert_subject" db:"alert_subject"`
 	AlertContent      string `json:"alert_content" db:"alert_content"`
 	WhenAlertRequired string `json:"when_alert_required" db:"when_alert_required"`
-	RepeatOn          string `json:"repeat_on" db:"repeat_on"`
 	Status            int    `json:"status" db:"status"`
 	WebsiteeId        string `json:"website_id" db:"website_id"`
 }
@@ -20,7 +19,6 @@ type CreateNewUserAlert struct {
 	AlertSubject      string `json:"Subject" db:"alert_subject"`
 	AlertContent      string `json:"Content" db:"alert_content"`
 	WhenAlertRequired string `json:"AlertOn" db:"when_alert_required"`
-	RepeatOn          string `json:"Repeat" db:"repeat_on"`
 	WebsiteeId        string `json:"webId" db:"website_id"`
 }
 
@@ -29,5 +27,4 @@ type UpdateUserAlert struct {
 	AlertSubject      string `json:"Subject" db:"alert_subject"`
 	AlertContent      string `json:"Content" db:"alert_content"`
 	WhenAlertRequired string `json:"AlertOn" db:"when_alert_required"`
-	RepeatOn          string `json:"Repeat" db:"repeat_on"`
 }

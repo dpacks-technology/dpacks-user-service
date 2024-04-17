@@ -67,16 +67,26 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		templateRoutes := api.Group("/marketplace") // marketplace api group
 		{
-			templateRoutes.GET("/templates/:count/:page", controllers.GetTemplates(db)) // get all
-			//templateRoutes.GET("/webpage/:id", controllers.GetWebPageById(db))                           // get by id
+			templateRoutes.POST("/template", controllers.AddTemplate(db)) // add webpage
+			templateRoutes.POST("/template/rating", controllers.AddTemplateRatings(db))
+
+			templateRoutes.GET("/templates/:count/:page", controllers.GetTemplates(db))                    // get all
+			templateRoutes.GET("/template/:id", controllers.GetTemplatesById(db))                          // get by id
 			templateRoutes.GET("/templates/status/:count/:page", controllers.GetTemplatesByStatus(db))     // get all by status
 			templateRoutes.GET("/templates/status/count", controllers.GetTemplatesByStatusCount(db))       // get all by status
 			templateRoutes.GET("/templates/datetime/:count/:page", controllers.GetTemplatesByDatetime(db)) // get all by datetime
 			templateRoutes.GET("/templates/datetime/count", controllers.GetTemplatesByDatetimeCount(db))   // get all by datetime
-			templateRoutes.GET("/templates/count", controllers.GetTemplatesCount(db))                      // get all count
+			templateRoutes.GET("/templates/count", controllers.GetTemplatesCount(db))
+			templateRoutes.GET("/templat/:id", controllers.DownloadById(db))
+			templateRoutes.GET("/templates/user/:count/:page", controllers.GetTemplatesBydid(db))
+			templateRoutes.GET("/templates/acceptstatus/:count/:page", controllers.GetAcceptedTemplates(db))
+			templateRoutes.GET("/templates/search/:count/:page", controllers.GetbySearchListingPage(db))
+			//templateRoutes.GET("/templates/sumcount", controllers.GetRatingSumAndCount(db))
 
-			templateRoutes.PUT("/templates/status/:id", controllers.UpdateTemplatesStatus(db)) // update status by id
-			//templateRoutes.PUT("/templates/:id", controllers.EditWebPage(db))                         // edit by id
+			// get all count
+
+			templateRoutes.PUT("/templates/status/:id", controllers.UpdateTemplatesStatus(db))          // update status by id
+			templateRoutes.PUT("/templates/:id", controllers.EditTemplatesD(db))                        // edit by id
 			templateRoutes.PUT("/templates/status/bulk/:id", controllers.UpdateTemplatesStatusBulk(db)) // update status by id (bulk)
 
 			templateRoutes.DELETE("/templates/:id", controllers.DeleteTemplateByID(db))          // delete by ID

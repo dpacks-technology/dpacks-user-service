@@ -61,6 +61,23 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		}
 
+		userRoutes := api.Group("/user") // user api group
+		{
+			userRoutes.GET("/users/:count/:page", controllers.GetUsers(db)) // get all users
+			//userRoutes.GET("/user/:id", controllers.GetUserById(db))                        // get a user by id
+			userRoutes.GET("/users/status/:count/:page", controllers.GetUsersByStatus(db))     // get all users by status
+			userRoutes.GET("/users/status/count", controllers.GetUsersByStatusCount(db))       // get all users by status
+			userRoutes.GET("/users/datetime/:count/:page", controllers.GetUsersByDatetime(db)) // get all users by datetime
+			userRoutes.GET("/users/datetime/count", controllers.GetUsersByDatetimeCount(db))   // get all users by datetime
+			userRoutes.GET("/users/count", controllers.GetUsersCount(db))                      // get all users count
+
+			userRoutes.PUT("/users/status/:id", controllers.UpdateUserStatus(db))          // update user status by id
+			userRoutes.PUT("/users/status/bulk/:id", controllers.UpdateUserStatusBulk(db)) // update users status by id (bulk)
+
+			userRoutes.DELETE("/users/:id", controllers.DeleteUserByID(db))          // delete user by ID
+			userRoutes.DELETE("/users/bulk/:id", controllers.DeleteUserByIDBulk(db)) // delete user by ID (bulk)
+		}
+
 		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
 		{
 			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db))
@@ -125,7 +142,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
-    
+
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
@@ -155,9 +172,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
-    
-    
-    BillingRoutes := api.Group("/billing") // web api group
+
+		BillingRoutes := api.Group("/billing") // web api group
 		{
 			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
 
@@ -175,7 +191,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
 			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-    }
-    
+		}
+
 	}
 }

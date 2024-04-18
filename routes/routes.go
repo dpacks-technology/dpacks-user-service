@@ -75,8 +75,6 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			adminUserRoutes.DELETE("/admins/:id", controllers.DeleteAdminByID(db))          // delete admin by ID
 			adminUserRoutes.DELETE("/admins/bulk/:id", controllers.DeleteAdminByIDBulk(db)) // delete admin by ID (bulk)
 
-			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
-
 		}
 
 		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
@@ -143,7 +141,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
-    
+
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
@@ -173,9 +171,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
-    
-    
-    BillingRoutes := api.Group("/billing") // web api group
+
+		BillingRoutes := api.Group("/billing") // web api group
 		{
 			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
 
@@ -193,7 +190,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
 			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-    }
-    
+		}
+
 	}
 }

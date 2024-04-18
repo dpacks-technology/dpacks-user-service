@@ -54,6 +54,16 @@ func AddSite(db *sql.DB) gin.HandlerFunc {
 func ReadSites(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		// get the authenticated user data
+		userid, _ := c.Get("auth_userId")
+		userKey, _ := c.Get("auth_userKey")
+		username, _ := c.Get("auth_username")
+		status, _ := c.Get("auth_status")
+		roles, _ := c.Get("auth_roles")
+
+		// print the user data
+		fmt.Printf("User data: %v, %v, %v, %v, %v\n", userid, userKey, username, status, roles)
+
 		// get data
 		query := `SELECT id, name, description, category, domain, status, last_updated FROM sites ORDER BY seq_id`
 

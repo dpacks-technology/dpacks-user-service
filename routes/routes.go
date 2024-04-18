@@ -57,6 +57,24 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		adminUserRoutes := api.Group("/admin_user") // admin user api group
 		{
+
+			adminUserRoutes.POST("/addAdmin", controllers.AddAdminUser(db)) // add admin
+
+			adminUserRoutes.GET("/admins/:count/:page", controllers.GetAdmins(db))                    // get all admins
+			adminUserRoutes.GET("/admin/:id", controllers.GetAdminById(db))                           // get a admin by id
+			adminUserRoutes.GET("/admins/status/:count/:page", controllers.GetAdminsByStatus(db))     // get all admins by status
+			adminUserRoutes.GET("/admins/status/count", controllers.GetAdminsByStatusCount(db))       // get all admins by status
+			adminUserRoutes.GET("/admins/datetime/:count/:page", controllers.GetAdminsByDatetime(db)) // get all admins by datetime
+			adminUserRoutes.GET("/admins/datetime/count", controllers.GetAdminsByDatetimeCount(db))   // get all admins by datetime count
+			adminUserRoutes.GET("/admins/count", controllers.GetAdminsCount(db))                      // get all admins count
+
+			adminUserRoutes.PUT("/admins/status/:id", controllers.UpdateAdminStatus(db))          // update admin status by id
+			adminUserRoutes.PUT("/admins/:id", controllers.EditAdmin(db))                         // edit admin by id
+			adminUserRoutes.PUT("/admins/status/bulk/:id", controllers.UpdateAdminStatusBulk(db)) // update admin status by id (bulk)
+
+			adminUserRoutes.DELETE("/admins/:id", controllers.DeleteAdminByID(db))          // delete admin by ID
+			adminUserRoutes.DELETE("/admins/bulk/:id", controllers.DeleteAdminByIDBulk(db)) // delete admin by ID (bulk)
+
 			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
 
 		}

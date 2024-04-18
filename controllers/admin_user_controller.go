@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/validators"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -22,11 +23,11 @@ func AddAdminUser(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		/*// Validate the admin data
-		if err := validators.ValidateName(admin, true); err != nil {
+		// Validate the admin data
+		if err := validators.ValidateAdmin(admin, true); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
-		}*/
+		}
 
 		// query to insert the admin
 		query := "INSERT INTO admin_user (name, phone, email, password) VALUES ($1, $2, $3, $4)"
@@ -601,10 +602,10 @@ func EditAdmin(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Validate the admin data
-		/*if err := validators.ValidateName(webpage, false); err != nil {
+		if err := validators.ValidateAdmin(admin, false); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
-		}*/
+		}
 
 		// Update the admin in the database
 		_, err := db.Exec("UPDATE admin_user SET name = $1, phone = $2, email = $3, password = $4 WHERE id = $5", admin.Name, admin.Phone, admin.Email, admin.Password, id)

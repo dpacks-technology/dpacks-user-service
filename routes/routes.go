@@ -77,6 +77,21 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		}
 
+		adminSitesRoutes := api.Group("/admin_sites") // admin site user api group
+		{
+
+			adminSitesRoutes.GET("/sites/:count/:page", controllers.GetSites(db))                    // get all sites
+			adminSitesRoutes.GET("/sites/status/:count/:page", controllers.GetSitesByStatus(db))     // get all site by status
+			adminSitesRoutes.GET("/sites/status/count", controllers.GetSitesByStatusCount(db))       // get all site by status
+			adminSitesRoutes.GET("/sites/datetime/:count/:page", controllers.GetSitesByDatetime(db)) // get all site by datetime
+			adminSitesRoutes.GET("/sites/datetime/count", controllers.GetSitesByDatetimeCount(db))   // get all site by datetime count
+			adminSitesRoutes.GET("/sites/count", controllers.GetSitesCount(db))                      // get all site count
+
+			adminSitesRoutes.PUT("/sites/status/:id", controllers.UpdateSiteStatus(db))           // update site status by id
+			adminSitesRoutes.PUT("/sites/status/bulk/:id", controllers.UpdateSitesStatusBulk(db)) // update site status by id (bulk)
+
+		}
+
 		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
 		{
 			apiSubscribersRoutes.POST("/subscriber", controllers.AddSubscribers(db))

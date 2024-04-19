@@ -12,25 +12,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AddWebPage handles POST /api/web/webpages - CREATE
-func AddRatelimit(db *sql.DB) gin.HandlerFunc {
+// AddBillingProfile POST /api/billing/profile - CREATE
+func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		userid, _ := c.Get("auth_userId")
 		// get the JSON data
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var transaction models.TransactionsModel
+		if err := c.ShouldBindJSON(&transaction); err != nil {
+			fmt.Printf("%s", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Validate the webpage data
-		if err := validators.ValidatePath(ratelimit, true); err != nil {
+		// Validate the transaction data
+		if err := validators.ValidateNames(transaction, true); err != nil {
+			fmt.Printf("%s", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// query to insert the webpage
-		query := "INSERT INTO endpoint_ratelimits (path, ratelimit) VALUES ($1, $2)"
+		// query to insert the transaction
+		query := "INSERT INTO billing_profile ( user_id,company_name,street_no,city, postal_code, country, email, payment_method, given_name , last_name, month, year, cvv, terms, transaction_date,card_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10,$11,$12,$13, $14, $15,$16)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -40,20 +43,21 @@ func AddRatelimit(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(ratelimit.Path, ratelimit.Limit)
+		_, err = stmt.Exec(userid, transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode,
+			transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.TransactionDate, transaction.CardNumber)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
 		// Return a success message
-		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
+		c.JSON(http.StatusCreated, gin.H{"message": "Plan added successfully"})
 
 	}
 }
 
-// GetWebPages handles GET /api/web/pages/ - READ
-func GetRateLimits(db *sql.DB) gin.HandlerFunc {
+// GetBillingProfiles handles GET /api/billing/profile/ - READ
+func GetBillingProfiles(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get page id parameter
@@ -88,17 +92,18 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM endpoint_ratelimits ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM billing_profile ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM endpoint_ratelimits WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "path":
-				query = "SELECT * FROM endpoint_ratelimits WHERE path LIKE $3 ORDER BY CASE WHEN path = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "status":
+				query = "SELECT * FROM billing_profile WHERE company_name LIKE $3 ORDER BY CASE WHEN status = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
+
 			}
 		}
 
@@ -121,16 +126,16 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into WebpageModel structs
-		var ratelimits []models.EndpointRateLimit
+		var transaction []models.TransactionsModel
 
 		for rows.Next() {
-			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status); err != nil {
+			var Transactions models.TransactionsModel
+			if err := rows.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			ratelimits = append(ratelimits, ratelimit)
+			transaction = append(transaction, Transactions)
 		}
 
 		//this runs only when loop didn't work
@@ -141,26 +146,26 @@ func GetRateLimits(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all webpages as JSON
-		c.JSON(http.StatusOK, ratelimits)
+		c.JSON(http.StatusOK, transaction)
 
 	}
 }
 
-// GetWebPageById handles GET /api/web/webpages/:id - READ
-func GetRatelimitById(db *sql.DB) gin.HandlerFunc {
+// GetBillingProfileById handles GET /api/billing/profile/:id - READ
+func GetBillingProfileById(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
 		// Query the database for a single record
-		row := db.QueryRow("SELECT * FROM endpoint_ratelimits WHERE id = $1", id)
+		row := db.QueryRow("SELECT * FROM billing_profile WHERE id = $1", id)
 
 		// Create a WebpageModel to hold the data
-		var ratelimit models.EndpointRateLimit
+		var Transactions models.TransactionsModel
 
 		// Scan the row data into the WebpageModel
-		err := row.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status)
+		err := row.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
@@ -168,13 +173,13 @@ func GetRatelimitById(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return the webpage as JSON
-		c.JSON(http.StatusOK, ratelimit)
+		c.JSON(http.StatusOK, Transactions)
 
 	}
 }
 
-// GetWebPagesByStatusCount handles GET /api/web/webpages/status/:status/count - READ
-func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
+// GetBillingProfileByStatusCount handles GET /api/billing/profile/status/:status/count - READ
+func GetBillingProfileByStatusCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get status parameter (array)
@@ -187,14 +192,18 @@ func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM endpoint_ratelimits"
+		query = "SELECT COUNT(*) FROM billing_profile"
 
 		switch statuses {
 		case "1":
-			query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE status IN ($1)"
+			query = "SELECT COUNT(*) FROM billing_profile WHERE status IN ($1)"
 			args = append(args, 1)
 		case "0":
-			query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE status IN ($1)"
+			query = "SELECT COUNT(*) FROM billing_profile WHERE status IN ($1)"
+			args = append(args, 0)
+
+		case "2":
+			query = "SELECT COUNT(*) FROM billing_profile WHERE status IN ($1)"
 			args = append(args, 0)
 		}
 
@@ -204,11 +213,12 @@ func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE id = $2 AND status IN ($1)"
+				query = "SELECT * FROM billing_profile WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "path":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE path LIKE $2 AND status IN ($1)"
+			case "status":
+				query = "SELECT * FROM billing_profile WHERE company_name LIKE $3 ORDER BY CASE WHEN status = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
+
 			}
 		}
 
@@ -237,8 +247,8 @@ func GetRatelimitsByStatusCount(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// GetWebPagesByStatus handles GET /api/web/webpages/status/:status - READ
-func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
+// GetTransactionByStatus handles GET /api/billing/profile/status/:status - READ
+func GetBillingProfileByStatus(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get status parameter (array)
@@ -275,15 +285,19 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT * FROM endpoint_ratelimits ORDER BY id LIMIT $1 OFFSET $2"
+		query = "SELECT * FROM billing_profile ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		switch statuses {
 		case "1":
-			query = "SELECT * FROM endpoint_ratelimits WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM billing_profile WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, 1)
 		case "0":
-			query = "SELECT * FROM endpoint_ratelimits WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM billing_profile WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			args = append(args, 0)
+
+		case "2":
+			query = "SELECT * FROM billing_profile WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, 0)
 		}
 
@@ -293,12 +307,15 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT * FROM endpoint_ratelimits WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-				query = "SELECT * FROM endpoint_ratelimits WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "path":
-				query = "SELECT * FROM endpoint_ratelimits WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			case "status":
+				query = "SELECT * FROM billing_profile WHERE company_name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
+				//case "path":
+				//	query = "SELECT * FROM webpages WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				//	args = append(args, escapedVal)
 			}
 		}
 
@@ -320,16 +337,16 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into WebpageModel structs
-		var ratelimits []models.EndpointRateLimit
+		var Transaction []models.TransactionsModel
 
 		for rows.Next() {
-			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Limit, &ratelimit.CreatedOn, &ratelimit.Status); err != nil {
+			var Transactions models.TransactionsModel
+			if err := rows.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			ratelimits = append(ratelimits, ratelimit)
+			Transaction = append(Transaction, Transactions)
 		}
 
 		//this runs only when loop didn't work
@@ -340,13 +357,13 @@ func GetRatelimitsByStatus(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all webpages as JSON
-		c.JSON(http.StatusOK, ratelimits)
+		c.JSON(http.StatusOK, Transaction)
 
 	}
 }
 
-// GetWebPagesByDatetime handles GET /api/web/webpages/datetime/:count/:page - READ
-func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
+// GetBillingProfileDateTime handles GET /api/billing/profile/datetime/:count/:page - READ
+func GetBillingProfileDateTime(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get page id parameter
@@ -382,11 +399,11 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM endpoint_ratelimits ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM billing_profile ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT * FROM endpoint_ratelimits WHERE created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM billing_profile WHERE date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, start, end)
 		}
 
@@ -394,11 +411,12 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT * FROM endpoint_ratelimits WHERE id = $5 AND created_on BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE id = $5 AND date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "path":
-				query = "SELECT * FROM endpoint_ratelimits WHERE path LIKE $5 AND created_on BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "status":
+				query = "SELECT * FROM billing_profile WHERE status LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
+
 			}
 		}
 
@@ -420,16 +438,16 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 		defer rows.Close()
 
 		// Iterate over the rows and scan them into WebpageModel structs
-		var ratelimits []models.EndpointRateLimit
+		var Transaction []models.TransactionsModel
 
 		for rows.Next() {
-			var ratelimit models.EndpointRateLimit
-			if err := rows.Scan(&ratelimit.Id, &ratelimit.Path, &ratelimit.Status, &ratelimit.CreatedOn, &ratelimit.Limit); err != nil {
+			var Transactions models.TransactionsModel
+			if err := rows.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			ratelimits = append(ratelimits, ratelimit)
+			Transaction = append(Transaction, Transactions)
 		}
 
 		//this runs only when loop didn't work
@@ -440,13 +458,13 @@ func GetRatelimitsByDatetime(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return all webpages as JSON
-		c.JSON(http.StatusOK, ratelimits)
+		c.JSON(http.StatusOK, Transaction)
 
 	}
 }
 
-// GetWebPagesByDatetimeCount handles GET /api/web/webpages/datetime/count - READ
-func GetRatelimitsByDatetimeCount(db *sql.DB) gin.HandlerFunc {
+// GetBillingProfileByDatetimeCount handles GET /api/billing/proifle/datetime/count - READ
+func GetBillingProfileByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get query parameters
@@ -458,10 +476,10 @@ func GetRatelimitsByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM endpoint_ratelimits"
+		query = "SELECT COUNT(*) FROM billing_profile"
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE created_on BETWEEN $1 AND $2"
+			query = "SELECT COUNT(*) FROM billing_profile WHERE date_created BETWEEN $1 AND $2"
 			args = append(args, start, end)
 		}
 
@@ -469,11 +487,14 @@ func GetRatelimitsByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE id = $3 AND created_on BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM billing_profile WHERE id = $3 AND date_created BETWEEN $1 AND $2"
 				args = append(args, val)
-			case "path":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE path LIKE $3 AND created_on BETWEEN $1 AND $2"
+			case "status":
+				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $3 AND date_created BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
+				//case "path":
+				//	query = "SELECT COUNT(*) FROM transactions WHERE path LIKE $3 AND date_created BETWEEN $1 AND $2"
+				//	args = append(args, escapedVal)
 			}
 		}
 
@@ -502,7 +523,7 @@ func GetRatelimitsByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-func GetRateLimitCount(db *sql.DB) gin.HandlerFunc {
+func GetBillingProfileCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		var count int
@@ -515,16 +536,17 @@ func GetRateLimitCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT COUNT(*) FROM endpoint_ratelimits"
+		query := "SELECT COUNT(*) FROM billing_profile"
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE id = $1"
+				query = "SELECT COUNT(*) FROM billing_profile WHERE id = $1"
 				args = append(args, val)
-			case "path":
-				query = "SELECT COUNT(*) FROM endpoint_ratelimits WHERE path LIKE $1"
+			case "status":
+				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $1"
 				args = append(args, escapedVal)
+
 			}
 		}
 
@@ -551,49 +573,51 @@ func GetRateLimitCount(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// EditWebPage handles PUT /api/web/webpages/:id - UPDATE
-
-func EditRatelimit(db *sql.DB) gin.HandlerFunc {
+// EditBillingProfile handles PUT /api/billing/proifle/:id - UPDATE
+func EditBillingProfile(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
 		// get the JSON data - only the name
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var transaction models.TransactionsModel
+		if err := c.ShouldBindJSON(&transaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// Validate the webpage data
-		if err := validators.ValidatePath(ratelimit, false); err != nil {
+		if err := validators.ValidateNames(transaction, false); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Update the webpage in the database
-		_, err := db.Exec("UPDATE endpoint_ratelimits SET ratelimit = $1 WHERE id = $2", ratelimit.Limit, id)
+		//print the model
+		fmt.Printf("%s", transaction)
+
+		// Update the billing details
+		_, err := db.Exec("UPDATE billing_profile SET company_name = $1, street_no= $2, city=$3, postal_code= $4, country=$5, email =$6, payment_method=$7, given_name =$8, last_name = $9, month = $10, year = $11, cvv = $12, terms= $13, card_number = $14 WHERE id = $15", transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode, transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.CardNumber, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 
 	}
 }
 
-// DeleteWebPageByID handles DELETE /api/web/webpages/:id - DELETE
-func DeleteRatelimitByID(db *sql.DB) gin.HandlerFunc {
+// DeleteBillingProfileByID handles DELETE /api/billing/proifle/:id - DELETE
+func DeleteBillingProfileByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
 		// query to delete the webpage
-		query := "DELETE FROM endpoint_ratelimits WHERE id = $1"
+		query := "DELETE FROM billing_profile WHERE id = $1"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -610,14 +634,13 @@ func DeleteRatelimitByID(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Transaction deleted successfully"})
 
 	}
 }
 
-// DeleteWebPageByIDBulk handles DELETE /api/web/webpages/bulk/:id - DELETE
-
-func DeleteRatelimitByIDBulk(db *sql.DB) gin.HandlerFunc {
+// DeleteBillingProfileByIDBulk handles DELETE /api/billing/proifle/bulk/:id - DELETE
+func DeleteBillingProfileByIDBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get ids array as a parameter as integer
@@ -629,7 +652,7 @@ func DeleteRatelimitByIDBulk(db *sql.DB) gin.HandlerFunc {
 		// Delete the webpage from the database
 		for _, id := range ids {
 			// query to delete the webpage
-			query := "DELETE FROM endpoint_ratelimits WHERE id = $1"
+			query := "DELETE FROM billing_profile WHERE id = $1"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)
@@ -652,8 +675,8 @@ func DeleteRatelimitByIDBulk(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// UpdateWebPageStatusBulk handles PUT /api/web/webpages/status/bulk/:id - UPDATE
-func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
+// UpdateBillingProfileBulk handles PUT /api/billing/proifle/status/bulk/:id - UPDATE
+func UpdateBillingProfileStatusBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
@@ -663,16 +686,16 @@ func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
 		ids := strings.Split(id, ",")
 
 		// get the JSON data - only the status
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var Transaction models.TransactionsModel
+		if err := c.ShouldBindJSON(&Transaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Update the webpage status in the database
+		// Update the transaction status in the database
 		for _, id := range ids {
 
-			query := "UPDATE endpoint_ratelimits SET status = $1 WHERE id = $2"
+			query := "UPDATE billing_profile SET status = $1 WHERE id = $2"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)
@@ -682,7 +705,7 @@ func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
 			}
 
 			// Execute the prepared statement with bound parameters
-			_, err = stmt.Exec(ratelimit.Status, id)
+			_, err = stmt.Exec(Transaction.Status, id)
 			if err != nil {
 				fmt.Printf("%s\n", err)
 				return
@@ -696,22 +719,22 @@ func UpdateRatelimitStatusBulk(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// UpdateWebPageStatus handles PUT /api/web/webpages/status/:id - UPDATE
-func UpdateRatelimitStatus(db *sql.DB) gin.HandlerFunc {
+// UpdateBillingProfileStatus handles PUT /api/billing/proifle/status/:id - UPDATE
+func UpdateBillingProfileStatus(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
 		// get the JSON data - only the status
-		var ratelimit models.EndpointRateLimit
-		if err := c.ShouldBindJSON(&ratelimit); err != nil {
+		var Transaction models.TransactionsModel
+		if err := c.ShouldBindJSON(&Transaction); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		// query to update the webpage status
-		query := "UPDATE endpoint_ratelimits SET status = $1 WHERE id = $2"
+		query := "UPDATE billing_profile SET status = $1 WHERE id = $2"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -721,14 +744,14 @@ func UpdateRatelimitStatus(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(ratelimit.Status, id)
+		_, err = stmt.Exec(Transaction.Status, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Transaction updated successfully"})
 
 	}
 }

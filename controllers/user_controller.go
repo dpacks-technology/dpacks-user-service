@@ -3,7 +3,6 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
-	"dpacks-go-services-template/validators"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,48 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AddWebPage handles POST /api/web/webpages - CREATE
-func AddWebPage(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		// get the JSON data
-		var webpage models.WebpageModel
-		if err := c.ShouldBindJSON(&webpage); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Validate the webpage data
-		if err := validators.ValidateWebpage(webpage, true); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// query to insert the webpage
-		query := "INSERT INTO webpages (name, webid, path, status) VALUES ($1, $2, $3, $4)"
-
-		// Prepare the statement
-		stmt, err := db.Prepare(query)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			return
-		}
-
-		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(webpage.Name, webpage.WebID, webpage.Path, 1)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			return
-		}
-
-		// Return a success message
-		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
-
-	}
-}
-
-// GetWebPages handles GET /api/web/pages/ - READ
-func GetWebPages(db *sql.DB) gin.HandlerFunc {
+// GetUsers handles GET - READ
+func GetUsers(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get page id parameter
@@ -88,19 +47,22 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM webpages ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM users ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM webpages WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM users WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "name":
-				query = "SELECT * FROM webpages WHERE name LIKE $3 ORDER BY CASE WHEN name = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "first_name":
+				query = "SELECT * FROM users WHERE first_name LIKE $3 ORDER BY CASE WHEN first_name = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT * FROM webpages WHERE path LIKE $3 ORDER BY CASE WHEN path = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "last_name":
+				query = "SELECT * FROM users WHERE last_name LIKE $3 ORDER BY CASE WHEN last_name = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			case "email":
+				query = "SELECT * FROM users WHERE email LIKE $3 ORDER BY CASE WHEN email = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -123,17 +85,17 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
-		var webpages []models.WebpageModel
+		// Iterate over the rows and scan them into userModel structs
+		var users []models.UserModel
 
 		for rows.Next() {
-			var webpage models.WebpageModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated); err != nil {
+			var user models.UserModel
+			if err := rows.Scan(&user.ID, &user.Code, &user.DOB, &user.FirstName, &user.ForgotCode, &user.ForgotCodeExpire, &user.Gender, &user.InitDate, &user.LastName, &user.Password, &user.Phone, &user.Status, &user.UserKey, &user.Email, &user.VerificationExp); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			users = append(users, user)
 		}
 
 		//this runs only when loop didn't work
@@ -143,41 +105,41 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
+		// Return all users as JSON
+		c.JSON(http.StatusOK, users)
 
 	}
 }
 
-// GetWebPageById handles GET /api/web/webpages/:id - READ
-func GetWebPageById(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
+//// GetUserById handles GET /api/web/webpages/:id - READ
+//func GetWebPageById(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//
+//		// get id parameter
+//		id := c.Param("id")
+//
+//		// Query the database for a single record
+//		row := db.QueryRow("SELECT * FROM users WHERE id = $1", id)
+//
+//		// Create a UserModel to hold the data
+//		var user models.UserModel
+//
+//		// Scan the row data into the UserModel
+//		err := row.Scan(&user.ID, &user.Code, &user.DOB, &user.FirstName, &user.ForgotCode, &user.ForgotCodeExpire, &user.Gender, &user.InitDate, &user.LastName, &user.Password, &user.Phone, &user.Status, &user.UserKey, &user.Email, &user.VerificationExp)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+//			return
+//		}
+//
+//		// Return the user as JSON
+//		c.JSON(http.StatusOK, user)
+//
+//	}
+//}
 
-		// get id parameter
-		id := c.Param("id")
-
-		// Query the database for a single record
-		row := db.QueryRow("SELECT * FROM webpages WHERE id = $1", id)
-
-		// Create a WebpageModel to hold the data
-		var webpage models.WebpageModel
-
-		// Scan the row data into the WebpageModel
-		err := row.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
-			return
-		}
-
-		// Return the webpage as JSON
-		c.JSON(http.StatusOK, webpage)
-
-	}
-}
-
-// GetWebPagesByStatusCount handles GET /api/web/webpages/status/:status/count - READ
-func GetWebPagesByStatusCount(db *sql.DB) gin.HandlerFunc {
+// GetUsersByStatusCount handles GET /api/user/users/status/:status/count - READ
+func GetUsersByStatusCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get status parameter (array)
@@ -190,14 +152,14 @@ func GetWebPagesByStatusCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM webpages"
+		query = "SELECT COUNT(*) FROM users"
 
 		switch statuses {
 		case "1":
-			query = "SELECT COUNT(*) FROM webpages WHERE status IN ($1)"
+			query = "SELECT COUNT(*) FROM users WHERE status IN ($1)"
 			args = append(args, 1)
 		case "0":
-			query = "SELECT COUNT(*) FROM webpages WHERE status IN ($1)"
+			query = "SELECT COUNT(*) FROM users WHERE status IN ($1)"
 			args = append(args, 0)
 		}
 
@@ -207,13 +169,16 @@ func GetWebPagesByStatusCount(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM webpages WHERE id = $2 AND status IN ($1)"
+				query = "SELECT COUNT(*) FROM users WHERE id = $2 AND status IN ($1)"
 				args = append(args, val)
-			case "name":
-				query = "SELECT COUNT(*) FROM webpages WHERE name LIKE $2 AND status IN ($1)"
+			case "first_name":
+				query = "SELECT COUNT(*) FROM users WHERE first_name LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT COUNT(*) FROM webpages WHERE path LIKE $2 AND status IN ($1)"
+			case "last_name":
+				query = "SELECT COUNT(*) FROM users WHERE last_name LIKE $2 AND status IN ($1)"
+				args = append(args, escapedVal)
+			case "email":
+				query = "SELECT COUNT(*) FROM users WHERE email LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
 			}
 		}
@@ -237,14 +202,14 @@ func GetWebPagesByStatusCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
-		// Return all webpages as JSON
+		// Return all users as JSON
 		c.JSON(http.StatusOK, count)
 
 	}
 }
 
-// GetWebPagesByStatus handles GET /api/web/webpages/status/:status - READ
-func GetWebPagesByStatus(db *sql.DB) gin.HandlerFunc {
+// GetUsersByStatus handles GET - READ
+func GetUsersByStatus(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get status parameter (array)
@@ -281,15 +246,15 @@ func GetWebPagesByStatus(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT * FROM webpages ORDER BY id LIMIT $1 OFFSET $2"
+		query = "SELECT * FROM users ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		switch statuses {
 		case "1":
-			query = "SELECT * FROM webpages WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM users WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, 1)
 		case "0":
-			query = "SELECT * FROM webpages WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM users WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, 0)
 		}
 
@@ -299,14 +264,17 @@ func GetWebPagesByStatus(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT * FROM webpages WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-				query = "SELECT * FROM webpages WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM users WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM users WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "name":
-				query = "SELECT * FROM webpages WHERE name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			case "first_name":
+				query = "SELECT * FROM users WHERE first_name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT * FROM webpages WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			case "last_name":
+				query = "SELECT * FROM users WHERE last_name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			case "email":
+				query = "SELECT * FROM users WHERE email LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -328,17 +296,17 @@ func GetWebPagesByStatus(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
-		var webpages []models.WebpageModel
+		// Iterate over the rows and scan them into UserModel structs
+		var users []models.UserModel
 
 		for rows.Next() {
-			var webpage models.WebpageModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated); err != nil {
+			var user models.UserModel
+			if err := rows.Scan(&user.ID, &user.Code, &user.DOB, &user.FirstName, &user.ForgotCode, &user.ForgotCodeExpire, &user.Gender, &user.InitDate, &user.LastName, &user.Password, &user.Phone, &user.Status, &user.UserKey, &user.Email, &user.VerificationExp); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			users = append(users, user)
 		}
 
 		//this runs only when loop didn't work
@@ -348,14 +316,14 @@ func GetWebPagesByStatus(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
+		// Return all users as JSON
+		c.JSON(http.StatusOK, users)
 
 	}
 }
 
-// GetWebPagesByDatetime handles GET /api/web/webpages/datetime/:count/:page - READ
-func GetWebPagesByDatetime(db *sql.DB) gin.HandlerFunc {
+// GetUsersByDatetime handles GET - READ
+func GetUsersByDatetime(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get page id parameter
@@ -391,11 +359,11 @@ func GetWebPagesByDatetime(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM webpages ORDER BY id LIMIT $1 OFFSET $2"
+		query := "SELECT * FROM users ORDER BY id LIMIT $1 OFFSET $2"
 		args = append(args, countInt, offset)
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT * FROM webpages WHERE date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM users WHERE init_date BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, start, end)
 		}
 
@@ -403,13 +371,16 @@ func GetWebPagesByDatetime(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT * FROM webpages WHERE id = $5 AND date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM users WHERE id = $5 AND init_date BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
-			case "name":
-				query = "SELECT * FROM webpages WHERE name LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "first_name":
+				query = "SELECT * FROM users WHERE first_name LIKE $5 AND init_date BETWEEN $3 AND $4 ORDER BY CASE WHEN first_name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT * FROM webpages WHERE path LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "last_name":
+				query = "SELECT * FROM users WHERE last_name LIKE $5 AND init_date BETWEEN $3 AND $4 ORDER BY CASE WHEN last_name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal)
+			case "email":
+				query = "SELECT * FROM users WHERE email LIKE $5 AND init_date BETWEEN $3 AND $4 ORDER BY CASE WHEN email = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -431,17 +402,17 @@ func GetWebPagesByDatetime(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
-		var webpages []models.WebpageModel
+		// Iterate over the rows and scan them into UsersModel structs
+		var users []models.UserModel
 
 		for rows.Next() {
-			var webpage models.WebpageModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path, &webpage.Status, &webpage.DateCreated); err != nil {
+			var user models.UserModel
+			if err := rows.Scan(&user.ID, &user.Code, &user.DOB, &user.FirstName, &user.ForgotCode, &user.ForgotCodeExpire, &user.Gender, &user.InitDate, &user.LastName, &user.Password, &user.Phone, &user.Status, &user.UserKey, &user.Email, &user.VerificationExp); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			users = append(users, user)
 		}
 
 		//this runs only when loop didn't work
@@ -451,14 +422,14 @@ func GetWebPagesByDatetime(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
+		// Return all users as JSON
+		c.JSON(http.StatusOK, users)
 
 	}
 }
 
-// GetWebPagesByDatetimeCount handles GET /api/web/webpages/datetime/count - READ
-func GetWebPagesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
+// GetUsersByDatetimeCount handles GET - READ
+func GetUsersByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get query parameters
@@ -470,10 +441,10 @@ func GetWebPagesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 		var query string
 
-		query = "SELECT COUNT(*) FROM webpages"
+		query = "SELECT COUNT(*) FROM users"
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT COUNT(*) FROM webpages WHERE date_created BETWEEN $1 AND $2"
+			query = "SELECT COUNT(*) FROM users WHERE init_date BETWEEN $1 AND $2"
 			args = append(args, start, end)
 		}
 
@@ -481,13 +452,13 @@ func GetWebPagesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM webpages WHERE id = $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM users WHERE id = $3 AND init_date BETWEEN $1 AND $2"
 				args = append(args, val)
 			case "name":
-				query = "SELECT COUNT(*) FROM webpages WHERE name LIKE $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM users WHERE name LIKE $3 AND init_date BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			case "path":
-				query = "SELECT COUNT(*) FROM webpages WHERE path LIKE $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM users WHERE path LIKE $3 AND init_date BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -511,13 +482,13 @@ func GetWebPagesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
-		// Return all webpages as JSON
+		// Return all users as JSON
 		c.JSON(http.StatusOK, count)
 
 	}
 }
 
-func GetWebPagesCount(db *sql.DB) gin.HandlerFunc {
+func GetUsersCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		var count int
@@ -530,18 +501,18 @@ func GetWebPagesCount(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT COUNT(*) FROM webpages"
+		query := "SELECT COUNT(*) FROM users"
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM webpages WHERE id = $1"
+				query = "SELECT COUNT(*) FROM users WHERE id = $1"
 				args = append(args, val)
-			case "name":
-				query = "SELECT COUNT(*) FROM webpages WHERE name LIKE $1"
+			case "first_name":
+				query = "SELECT COUNT(*) FROM users WHERE first_name LIKE $1"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT COUNT(*) FROM webpages WHERE path LIKE $1"
+			case "last_name":
+				query = "SELECT COUNT(*) FROM users WHERE last_name LIKE $1"
 				args = append(args, escapedVal)
 			}
 		}
@@ -569,48 +540,15 @@ func GetWebPagesCount(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// EditWebPage handles PUT /api/web/webpages/:id - UPDATE
-func EditWebPage(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		// get id parameter
-		id := c.Param("id")
-
-		// get the JSON data - only the name
-		var webpage models.WebpageModel
-		if err := c.ShouldBindJSON(&webpage); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Validate the webpage data
-		if err := validators.ValidateWebpage(webpage, false); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Update the webpage in the database
-		_, err := db.Exec("UPDATE webpages SET name = $1 WHERE id = $2", webpage.Name, id)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			return
-		}
-
-		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
-
-	}
-}
-
 // DeleteWebPageByID handles DELETE /api/web/webpages/:id - DELETE
-func DeleteWebPageByID(db *sql.DB) gin.HandlerFunc {
+func DeleteUserByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
 		// query to delete the webpage
-		query := "DELETE FROM webpages WHERE id = $1"
+		query := "DELETE FROM users WHERE id = $1"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -627,13 +565,13 @@ func DeleteWebPageByID(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 
 	}
 }
 
-// DeleteWebPageByIDBulk handles DELETE /api/web/webpages/bulk/:id - DELETE
-func DeleteWebPageByIDBulk(db *sql.DB) gin.HandlerFunc {
+// DeleteUserByIDBulk handles DELETE - DELETE
+func DeleteUserByIDBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get ids array as a parameter as integer
@@ -642,10 +580,10 @@ func DeleteWebPageByIDBulk(db *sql.DB) gin.HandlerFunc {
 		// Convert the string of ids to an array of ids
 		ids := strings.Split(id, ",")
 
-		// Delete the webpage from the database
+		// Delete the user from the database
 		for _, id := range ids {
 			// query to delete the webpage
-			query := "DELETE FROM webpages WHERE id = $1"
+			query := "DELETE FROM users WHERE id = $1"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)
@@ -663,13 +601,13 @@ func DeleteWebPageByIDBulk(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "User bulk deleted successfully"})
 
 	}
 }
 
-// UpdateWebPageStatusBulk handles PUT /api/web/webpages/status/bulk/:id - UPDATE
-func UpdateWebPageStatusBulk(db *sql.DB) gin.HandlerFunc {
+// UpdateUserStatusBulk handles PUT - UPDATE
+func UpdateUserStatusBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
@@ -679,16 +617,16 @@ func UpdateWebPageStatusBulk(db *sql.DB) gin.HandlerFunc {
 		ids := strings.Split(id, ",")
 
 		// get the JSON data - only the status
-		var webpage models.WebpageModel
-		if err := c.ShouldBindJSON(&webpage); err != nil {
+		var user models.UserModel
+		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Update the webpage status in the database
+		// Update the user status in the database
 		for _, id := range ids {
 
-			query := "UPDATE webpages SET status = $1 WHERE id = $2"
+			query := "UPDATE users SET status = $1 WHERE id = $2"
 
 			// Prepare the statement
 			stmt, err := db.Prepare(query)
@@ -698,7 +636,7 @@ func UpdateWebPageStatusBulk(db *sql.DB) gin.HandlerFunc {
 			}
 
 			// Execute the prepared statement with bound parameters
-			_, err = stmt.Exec(webpage.Status, id)
+			_, err = stmt.Exec(user.Status, id)
 			if err != nil {
 				fmt.Printf("%s\n", err)
 				return
@@ -707,27 +645,27 @@ func UpdateWebPageStatusBulk(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "User status updated successfully"})
 
 	}
 }
 
-// UpdateWebPageStatus handles PUT /api/web/webpages/status/:id - UPDATE
-func UpdateWebPageStatus(db *sql.DB) gin.HandlerFunc {
+// UpdateUserStatus handles PUT - UPDATE
+func UpdateUserStatus(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
 		// get the JSON data - only the status
-		var webpage models.WebpageModel
-		if err := c.ShouldBindJSON(&webpage); err != nil {
+		var user models.UserModel
+		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// query to update the webpage status
-		query := "UPDATE webpages SET status = $1 WHERE id = $2"
+		// query to update the user status
+		query := "UPDATE users SET status = $1 WHERE id = $2"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -737,14 +675,14 @@ func UpdateWebPageStatus(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(webpage.Status, id)
+		_, err = stmt.Exec(user.Status, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "User status updated successfully"})
 
 	}
 }

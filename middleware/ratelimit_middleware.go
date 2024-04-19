@@ -59,7 +59,7 @@ func (rl *RateLimit) Limit() gin.HandlerFunc {
 }
 
 func (rl *RateLimit) updateLimitsFromDatabase() error {
-	rows, err := rl.db.Query("SELECT path, ratelimit FROM endpoint_ratelimits")
+	rows, err := rl.db.Query("SELECT path, ratelimit FROM api_endpoints")
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (rl *RateLimit) updateLimitsFromDatabase() error {
 	for rows.Next() {
 
 		//using model
-		var limitModel models.EndpointRateLimit
+		var limitModel models.Endpoint
 
 		err := rows.Scan(&limitModel.Path, &limitModel.Limit)
 		if err != nil {

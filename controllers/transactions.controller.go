@@ -16,6 +16,7 @@ import (
 func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		userid, _ := c.Get("auth_userId")
 		// get the JSON data
 		var transaction models.TransactionsModel
 		if err := c.ShouldBindJSON(&transaction); err != nil {
@@ -32,7 +33,7 @@ func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// query to insert the transaction
-		query := "INSERT INTO billing_profile ( company_name,street_no,city, postal_code, country, email, payment_method, given_name , last_name, month, year, cvv, terms, transaction_date,card_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10,$11,$12,$13, $14, $15)"
+		query := "INSERT INTO billing_profile ( user_id,company_name,street_no,city, postal_code, country, email, payment_method, given_name , last_name, month, year, cvv, terms, transaction_date,card_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10,$11,$12,$13, $14, $15,$16)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -42,7 +43,7 @@ func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode,
+		_, err = stmt.Exec(userid, transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode,
 			transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.TransactionDate, transaction.CardNumber)
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -592,8 +593,11 @@ func EditBillingProfile(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		//print the model
+		fmt.Printf("%s", transaction)
+
 		// Update the billing details
-		_, err := db.Exec("UPDATE billing_profile SET company_name = $1, street_no= $2, city=$3, postal_code= $4, country=$5, email =$6, payment_method=$7, given_name =$8, last_name = $9, month = $10, year = $11, cvv = $12, terms= $13, card_number = #14 WHERE id = $15", transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode, transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.CardNumber, id)
+		_, err := db.Exec("UPDATE billing_profile SET company_name = $1, street_no= $2, city=$3, postal_code= $4, country=$5, email =$6, payment_method=$7, given_name =$8, last_name = $9, month = $10, year = $11, cvv = $12, terms= $13, card_number = $14 WHERE id = $15", transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode, transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.CardNumber, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

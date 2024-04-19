@@ -28,3 +28,14 @@ type UpdateUserAlert struct {
 	AlertContent      string `json:"Content" db:"alert_content"`
 	WhenAlertRequired string `json:"AlertOn" db:"when_alert_required"`
 }
+
+type SessionRecord struct {
+	SessionID    string `json:"session_id" db:"sessionid"`
+	SessionStart string `json:"session_start" db:"sessionstart"`
+	IpAddress    string `json:"ip_address" db:"ipaddress"`
+	CountryCode  string `json:"country_code" db:"countrycode"`
+	DeviceId     int    `json:"device_id" db:"deviceid"`
+	SourceId     int    `json:"source_id" db:"source_id"`
+	LandingPage  string `json:"landing_page" db:"landingpage"`
+	WebId        string `json:"web_id" db:"web_id"`
+}

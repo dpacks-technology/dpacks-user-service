@@ -21,10 +21,6 @@ func CreateNewAlert(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		//print the model alert
-		//fmt.Printf("test %s", alert)
-
-		// query to insert the webpage
 		query := "INSERT INTO useralerts (alert_threshold, alert_subject,alert_content,when_alert_required,website_id) VALUES ($1, $2, $3, $4,$5)"
 
 		// Prepare the statement
@@ -599,12 +595,6 @@ func EditAlert(db *sql.DB) gin.HandlerFunc {
 
 		fmt.Printf("test %s", updateAlert)
 
-		// Validate the webpage data
-		//if err := validators.ValidateName(webpage, false); err != nil {
-		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		//	return
-		//}
-
 		// Update the webpage in the database
 		_, err := db.Exec("UPDATE useralerts SET alert_threshold=$1,alert_subject=$2,alert_content=$3,when_alert_required=$4 where id=$5", updateAlert.AlertThreshold, updateAlert.AlertSubject, updateAlert.AlertContent, updateAlert.WhenAlertRequired, id)
 		if err != nil {
@@ -616,4 +606,42 @@ func EditAlert(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
 
 	}
+}
+
+func SessionRecord(db *sql.DB) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		// get the JSON data
+		var session models.SessionRecord
+		if err := c.ShouldBindJSON(&session); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		query := "INSERT INTO sessions (sessionid, sessionstart,ipaddress,countrycode,deviceid,source_id,landingpage,web_id) VALUES ($1, $2, $3, $4,$5,$6,$7,$8)"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		fmt.Printf("test3")
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(session.SessionID, session.SessionStart, session.IpAddress, session.CountryCode, session.DeviceId, session.SourceId, session.LandingPage, session.WebId)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		fmt.Printf("test4")
+
+		// Return a success message
+		c.JSON(http.StatusCreated, gin.H{"message": "Added session record Succesfully"})
+
+	}
+
 }

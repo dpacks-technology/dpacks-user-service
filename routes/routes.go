@@ -57,8 +57,56 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		adminUserRoutes := api.Group("/admin_user") // admin user api group
 		{
-			adminUserRoutes.GET("/", controllers.GetAdminUsers(db)) // get all admin users
 
+			adminUserRoutes.POST("/addAdmin", controllers.AddAdminUser(db)) // add admin
+
+			adminUserRoutes.GET("/admins/:count/:page", controllers.GetAdmins(db))                    // get all admins
+			adminUserRoutes.GET("/admin/:id", controllers.GetAdminById(db))                           // get a admin by id
+			adminUserRoutes.GET("/admins/status/:count/:page", controllers.GetAdminsByStatus(db))     // get all admins by status
+			adminUserRoutes.GET("/admins/status/count", controllers.GetAdminsByStatusCount(db))       // get all admins by status
+			adminUserRoutes.GET("/admins/datetime/:count/:page", controllers.GetAdminsByDatetime(db)) // get all admins by datetime
+			adminUserRoutes.GET("/admins/datetime/count", controllers.GetAdminsByDatetimeCount(db))   // get all admins by datetime count
+			adminUserRoutes.GET("/admins/count", controllers.GetAdminsCount(db))                      // get all admins count
+
+			adminUserRoutes.PUT("/admins/status/:id", controllers.UpdateAdminStatus(db))          // update admin status by id
+			adminUserRoutes.PUT("/admins/:id", controllers.EditAdmin(db))                         // edit admin by id
+			adminUserRoutes.PUT("/admins/status/bulk/:id", controllers.UpdateAdminStatusBulk(db)) // update admin status by id (bulk)
+
+			adminUserRoutes.DELETE("/admins/:id", controllers.DeleteAdminByID(db))          // delete admin by ID
+			adminUserRoutes.DELETE("/admins/bulk/:id", controllers.DeleteAdminByIDBulk(db)) // delete admin by ID (bulk)
+
+		}
+
+		adminSitesRoutes := api.Group("/admin_sites") // admin site user api group
+		{
+
+			adminSitesRoutes.GET("/sites/:count/:page", controllers.GetSites(db))                    // get all sites
+			adminSitesRoutes.GET("/sites/status/:count/:page", controllers.GetSitesByStatus(db))     // get all site by status
+			adminSitesRoutes.GET("/sites/status/count", controllers.GetSitesByStatusCount(db))       // get all site by status
+			adminSitesRoutes.GET("/sites/datetime/:count/:page", controllers.GetSitesByDatetime(db)) // get all site by datetime
+			adminSitesRoutes.GET("/sites/datetime/count", controllers.GetSitesByDatetimeCount(db))   // get all site by datetime count
+			adminSitesRoutes.GET("/sites/count", controllers.GetSitesCount(db))                      // get all site count
+
+			adminSitesRoutes.PUT("/sites/status/:id", controllers.UpdateSiteStatus(db))           // update site status by id
+			adminSitesRoutes.PUT("/sites/status/bulk/:id", controllers.UpdateSitesStatusBulk(db)) // update site status by id (bulk)
+
+		}
+
+		userRoutes := api.Group("/user") // user api group
+		{
+			userRoutes.GET("/users/:count/:page", controllers.GetUsers(db)) // get all users
+			//userRoutes.GET("/user/:id", controllers.GetUserById(db))                        // get a user by id
+			userRoutes.GET("/users/status/:count/:page", controllers.GetUsersByStatus(db))     // get all users by status
+			userRoutes.GET("/users/status/count", controllers.GetUsersByStatusCount(db))       // get all users by status
+			userRoutes.GET("/users/datetime/:count/:page", controllers.GetUsersByDatetime(db)) // get all users by datetime
+			userRoutes.GET("/users/datetime/count", controllers.GetUsersByDatetimeCount(db))   // get all users by datetime
+			userRoutes.GET("/users/count", controllers.GetUsersCount(db))                      // get all users count
+
+			userRoutes.PUT("/users/status/:id", controllers.UpdateUserStatus(db))          // update user status by id
+			userRoutes.PUT("/users/status/bulk/:id", controllers.UpdateUserStatusBulk(db)) // update users status by id (bulk)
+
+			userRoutes.DELETE("/users/:id", controllers.DeleteUserByID(db))          // delete user by ID
+			userRoutes.DELETE("/users/bulk/:id", controllers.DeleteUserByIDBulk(db)) // delete user by ID (bulk)
 		}
 
 		apiSubscribersRoutes := api.Group("/api_subscribers") // admin api subscriber  api group
@@ -100,6 +148,11 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
 		{
 			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+
+			analyticalAlertsRoutes.GET("/source/:id", controllers.GetSource(db))
+			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
+			analyticalAlertsRoutes.GET("/devices/:id", controllers.GetDevices(db))
+			analyticalAlertsRoutes.GET("/country/:id", controllers.GetCountry(db))
 		}
 
 		keyPairsRoutes := api.Group("/keypairs") // keypairs api group
@@ -125,7 +178,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
-    
+
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
@@ -155,9 +208,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
-    
-    
-    BillingRoutes := api.Group("/billing") // web api group
+
+		BillingRoutes := api.Group("/billing") // web api group
 		{
 			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
 
@@ -175,7 +227,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
 			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-    }
-    
+		}
+
 	}
 }

@@ -15,6 +15,20 @@ func GetSubscriptionByID(db *sql.DB) gin.HandlerFunc {
 		// get id parameter
 		id := c.Param("id")
 
+		// check count first and return empty array if no records
+		var count int
+		err := db.QueryRow("SELECT COUNT(plan.plan_id) FROM subscription sub, subscriptionplans plan WHERE sub.plan_id = plan.plan_id AND sub.project_id = $1", id).Scan(&count)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting count of subscription from the database"})
+			return
+		}
+
+		if count == 0 {
+			c.JSON(http.StatusOK, []models.SubscriptionPlans{})
+			return
+		}
+
 		// Query the database for a single record
 		row := db.QueryRow("SELECT plan.plan_id, plan.plan_name, plan.description, plan.duration, plan.features, plan.monthly_price, plan.annual_price, plan.status FROM subscription sub, subscriptionplans plan WHERE sub.plan_id = plan.plan_id AND sub.project_id = $1", id)
 

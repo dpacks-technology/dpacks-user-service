@@ -149,7 +149,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			analyticalAlertsRoutes.GET("/visitorsInfo/:count/:page/:id", controllers.GetVisitorInfo(db)) // get all webpages
 			analyticalAlertsRoutes.GET("/visitorInfo/:id", controllers.GetVisitorInfoById(db))           // get a webpage by id
-			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+			//analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
 
 			analyticalAlertsRoutes.GET("/source/:id", controllers.GetSource(db))
 			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
@@ -166,93 +166,87 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			keyPairsRoutes.DELETE("/:id", controllers.DeleteKeyPair(db)) // delete keypair for the given user id
 		}
 
-			analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
-			analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime
-			analyticalAlertsRoutes.GET("/visitorInfo/count/:id", controllers.GetVisitorInfoCount(db))                  // get all webpages count
+		analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
+		analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime
+		analyticalAlertsRoutes.GET("/visitorInfo/count/:id", controllers.GetVisitorInfoCount(db))                  // get all webpages count
 
-			keyPairsRoutes := api.Group("/keypairs") // keypairs api group
-			{
-				keyPairsRoutes.GET("/", controllers.GetKeyPairs(db)) // get all keypairs
-			}
-
-			subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
-			{
-				subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
-			}
-
-			templateRoutes := api.Group("/template") // template api group
-			{
-				templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
-			}
-
-			visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
-			{
-				visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
-			}
-		}
-
-		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
+		subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
 		{
-
-			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db))
-
-			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))
-			rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))
-			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))
-			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))
-			rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db))
-			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))
-			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))
-
-			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))
-			rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))
-			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db))
-
-			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))
-			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db))
+			subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
 		}
 
-		webContentRoutes := api.Group("/webcontent")
-		//apply ratelimiter for webcontent subgrooup
-		webContentRoutes.Use(rateLimiter.Limit()) //this also possible
-		webContentRoutes.Use(middleware.AuthMiddleware(db))
+		templateRoutes := api.Group("/template") // template api group
 		{
-			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
-			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
+			templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
 		}
 
-		BillingRoutes := api.Group("/billing") // web api group
+		visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
 		{
-			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db))                              // add transaction
-			BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
-			BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
-			BillingRoutes.GET("/profiles/status/:count/:page", controllers.GetBillingProfileByStatus(db))   // get all transactions by status
-			BillingRoutes.GET("/profiles/status/count", controllers.GetBillingProfileByStatusCount(db))     // get all transactions by status
-			BillingRoutes.GET("/profiles/datetime/:count/:page", controllers.GetBillingProfileDateTime(db)) // get all transactions by datetime
-			BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
-			BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
-			BillingRoutes.GET("/profile/check/:web_id", controllers.CheckBillingProfileExists(db))          // get all transactions total
-
-			BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
-			BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id
-			BillingRoutes.PUT("/profiles/status/bulk/:id", controllers.UpdateBillingProfileStatusBulk(db)) // update transactions status by id (bulk)
-
-			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
-			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-
+			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
+	}
 
-		SubscriptionRoutes := api.Group("/subscription") // subscription api group
-		{
-			SubscriptionRoutes.POST("/", controllers.Subscribe(db)) // add transaction
+	rateLimitRouts := api.Group("/ratelimit") // visitor user api group
+	{
 
-			SubscriptionRoutes.PUT("/", controllers.UpdateSubscribe(db)) // add transaction
+		rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db))
 
-			SubscriptionRoutes.GET("/check/:web_id", controllers.CheckSubscriptionExists(db)) // get all transactions total
-			SubscriptionRoutes.GET("/:id", controllers.GetSubscriptionByID(db))
+		rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))
+		rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))
+		rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))
+		rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))
+		rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db))
+		rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))
+		rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))
 
-			SubscriptionRoutes.DELETE("/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
-		}
+		rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))
+		rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))
+		rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db))
+
+		rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))
+		rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db))
+	}
+
+	webContentRoutes := api.Group("/webcontent")
+	//apply ratelimiter for webcontent subgrooup
+	webContentRoutes.Use(rateLimiter.Limit()) //this also possible
+	webContentRoutes.Use(middleware.AuthMiddleware(db))
+	{
+		webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
+		webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
+	}
+
+	BillingRoutes := api.Group("/billing") // web api group
+	{
+		BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db))                              // add transaction
+		BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
+		BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
+		BillingRoutes.GET("/profiles/status/:count/:page", controllers.GetBillingProfileByStatus(db))   // get all transactions by status
+		BillingRoutes.GET("/profiles/status/count", controllers.GetBillingProfileByStatusCount(db))     // get all transactions by status
+		BillingRoutes.GET("/profiles/datetime/:count/:page", controllers.GetBillingProfileDateTime(db)) // get all transactions by datetime
+		BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
+		BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
+		BillingRoutes.GET("/profile/check/:web_id", controllers.CheckBillingProfileExists(db))          // get all transactions total
+
+		BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
+		BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id
+		BillingRoutes.PUT("/profiles/status/bulk/:id", controllers.UpdateBillingProfileStatusBulk(db)) // update transactions status by id (bulk)
+
+		BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
+		BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
 
 	}
+
+	SubscriptionRoutes := api.Group("/subscription") // subscription api group
+	{
+		SubscriptionRoutes.POST("/", controllers.Subscribe(db)) // add transaction
+
+		SubscriptionRoutes.PUT("/", controllers.UpdateSubscribe(db)) // add transaction
+
+		SubscriptionRoutes.GET("/check/:web_id", controllers.CheckSubscriptionExists(db)) // get all transactions total
+		SubscriptionRoutes.GET("/:id", controllers.GetSubscriptionByID(db))
+
+		SubscriptionRoutes.DELETE("/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
+	}
+
 }

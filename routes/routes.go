@@ -150,6 +150,9 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			analyticalAlertsRoutes.GET("/visitorsInfo/:count/:page/:id", controllers.GetVisitorInfo(db)) // get all webpages
 			analyticalAlertsRoutes.GET("/visitorInfo/:id", controllers.GetVisitorInfoById(db))           // get a webpage by id
 			//analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
+			analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
+			analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime
+			analyticalAlertsRoutes.GET("/visitorInfo/count/:id", controllers.GetVisitorInfoCount(db))                  // get all webpages count
 
 			analyticalAlertsRoutes.GET("/source/:id", controllers.GetSource(db))
 			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
@@ -166,9 +169,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			keyPairsRoutes.DELETE("/:id", controllers.DeleteKeyPair(db)) // delete keypair for the given user id
 		}
 
-		analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
-		analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime
-		analyticalAlertsRoutes.GET("/visitorInfo/count/:id", controllers.GetVisitorInfoCount(db))                  // get all webpages count
+		
 
 		subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
 		{

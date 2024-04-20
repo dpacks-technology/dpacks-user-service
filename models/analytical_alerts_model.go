@@ -12,3 +12,12 @@ type UserAlerts struct {
 	ReminderOption     string `json:"reminder_option"`
 	CustomReminderDate string `json:"custom_reminder_date"`
 }
+type VisitorInfo struct {
+	ID          int    `json:"id"`
+	IpAddres    string `json:"ip_address"`
+	Device      string `json:"device"`
+	Country     string `json:"country"`
+	Source      string `json:"source"`
+	VisitedDate string `json:"visited_time"`
+	WebId       string `json:"web_id"`
+}

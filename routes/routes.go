@@ -145,8 +145,10 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			autoRespondRoutes.DELETE("/auto_respond/bulk/:id", controllers.DeleteAutoRespondsByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
-		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group
+		analyticalAlertsRoutes := api.Group("/analytics") // analytical alerts api group
 		{
+			analyticalAlertsRoutes.GET("/visitorsInfo/:count/:page/:id", controllers.GetVisitorInfo(db)) // get all webpages
+			analyticalAlertsRoutes.GET("/visitorInfo/:id", controllers.GetVisitorInfoById(db))           // get a webpage by id
 			analyticalAlertsRoutes.GET("/", controllers.GetAnalyticalAlerts(db)) // get all analytical alerts
 
 			analyticalAlertsRoutes.GET("/source/:id", controllers.GetSource(db))
@@ -164,19 +166,29 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			keyPairsRoutes.DELETE("/:id", controllers.DeleteKeyPair(db)) // delete keypair for the given user id
 		}
 
-		subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
-		{
-			subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
-		}
+			analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
+			analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime
+			analyticalAlertsRoutes.GET("/visitorInfo/count/:id", controllers.GetVisitorInfoCount(db))                  // get all webpages count
 
-		templateRoutes := api.Group("/template") // template api group
-		{
-			templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
-		}
+			keyPairsRoutes := api.Group("/keypairs") // keypairs api group
+			{
+				keyPairsRoutes.GET("/", controllers.GetKeyPairs(db)) // get all keypairs
+			}
 
-		visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
-		{
-			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
+			subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
+			{
+				subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
+			}
+
+			templateRoutes := api.Group("/template") // template api group
+			{
+				templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
+			}
+
+			visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
+			{
+				visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
+			}
 		}
 
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group

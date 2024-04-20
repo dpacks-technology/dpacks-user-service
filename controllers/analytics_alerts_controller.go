@@ -619,7 +619,7 @@ func SessionRecord(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		query := "INSERT INTO sessions (sessionid, sessionstart,ipaddress,countrycode,deviceid,source_id,landingpage,web_id) VALUES ($1, $2, $3, $4,$5,$6,$7,$8)"
+		query := "INSERT INTO sessions (sessionid,ipaddress,countrycode,deviceid,source_id,landingpage,web_id) VALUES ($1, $2, $3, $4,$5,$6,$7)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -628,10 +628,8 @@ func SessionRecord(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("test3")
-
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(session.SessionID, session.SessionStart, session.IpAddress, session.CountryCode, session.DeviceId, session.SourceId, session.LandingPage, session.WebId)
+		_, err = stmt.Exec(session.SessionID, session.IpAddress, session.CountryCode, session.DeviceId, session.SourceId, session.LandingPage, session.WebId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

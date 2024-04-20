@@ -13,6 +13,8 @@ import (
 func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		id := c.Param("id")
+
 		// get page id parameter
 		page := c.Param("page")
 
@@ -45,19 +47,18 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 		var args []interface{}
 
 		// Query the database for records based on pagination
-		query := "SELECT * FROM visitor_info ORDER BY id LIMIT $1 OFFSET $2"
-		args = append(args, countInt, offset)
+		query := "SELECT * FROM visitor_info WHERE webid = $3 ORDER BY id LIMIT $1 OFFSET $2"
+		args = append(args, countInt, offset, id) // Added 'id' to the args slice for SQL query
 
 		if val != "" && key != "" {
 			switch key {
 			case "id":
-				query = "SELECT * FROM visitor_info WHERE id = $3 ORDER BY CASE WHEN id = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				args = append(args, val)
+				// Already filtering by ID, so no need to change the query
 			case "device":
-				query = "SELECT * FROM visitor_info WHERE device LIKE $3 ORDER BY CASE WHEN device = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal)
+				query = "SELECT * FROM visitor_info WHERE webid = $3 AND device LIKE $4 ORDER BY id LIMIT $1 OFFSET $2"
+				args = append(args, escapedVal) // Adjust the args slice accordingly
 			case "country":
-				query = "SELECT * FROM visitor_info WHERE country LIKE $3 ORDER BY CASE WHEN country = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM visitor_info WHERE webid = $3 AND country LIKE $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -103,60 +104,61 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 		// Return all webpages as JSON
 		c.JSON(http.StatusOK, visitorsInfo)
 	}
-
 }
 
 func GetVisitorInfoCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		// Get the visitor ID from the URL parameter
+		id := c.Param("id")
+
 		var count int
 
-		// get query parameters
+		// Get query parameters
 		key := c.Query("key")
 		val := c.Query("val")
 		escapedVal := strings.ReplaceAll(val, "_", "\\_") + "%"
 
 		var args []interface{}
 
-		// Query the database for records based on pagination
-		query := "SELECT COUNT(*) FROM visitor_info"
+		// Start building the query
+		query := "SELECT COUNT(*) FROM visitor_info WHERE webid = $1"
+		args = append(args, id)
 
 		if val != "" && key != "" {
+			// Depending on the key, modify the query to include an additional filter
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM visitor_info WHERE id = $1"
-				args = append(args, val)
+				// No additional filter needed if key is 'id' since we're already filtering by id
 			case "device":
-				query = "SELECT COUNT(*) FROM visitor_info WHERE device LIKE $1"
+				query += " AND device LIKE $2"
 				args = append(args, escapedVal)
 			case "country":
-				query = "SELECT COUNT(*) FROM visitor_info WHERE country LIKE $1"
+				query += " AND country LIKE $2"
 				args = append(args, escapedVal)
 			}
 		}
 
-		// Prepare the statement
+		// Prepare the SQL statement
 		stmt, err := db.Prepare(query)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing query"})
 			return
 		}
+		defer stmt.Close()
 
-		// Execute the prepared statement with bound parameters
+		// Execute the query
 		err = stmt.QueryRow(args...).Scan(&count)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing query"})
 			return
 		}
 
-		// Close the statement
-		defer stmt.Close()
-
-		// Return all webpages as JSON
+		// Return the count as JSON
 		c.JSON(http.StatusOK, count)
-
 	}
-
 }
 
 func GetVisitorInfoByDatetime(db *sql.DB) gin.HandlerFunc {

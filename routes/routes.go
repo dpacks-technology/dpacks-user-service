@@ -53,12 +53,12 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		analyticalAlertsRoutes := api.Group("/analytics") // analytical alerts api group
 		{
 
-			analyticalAlertsRoutes.GET("/visitorsInfo/:count/:page", controllers.GetVisitorInfo(db)) // get all webpages
-			analyticalAlertsRoutes.GET("/visitorInfo/:id", controllers.GetVisitorInfoById(db))       // get a webpage by id
+			analyticalAlertsRoutes.GET("/visitorsInfo/:count/:page/:id", controllers.GetVisitorInfo(db)) // get all webpages
+			analyticalAlertsRoutes.GET("/visitorInfo/:id", controllers.GetVisitorInfoById(db))           // get a webpage by id
 
 			analyticalAlertsRoutes.GET("/visitorInfo/datetime/:count/:page", controllers.GetVisitorInfoByDatetime(db)) // get all webpages by datetime
 			analyticalAlertsRoutes.GET("/visitorInfo/datetime/count", controllers.GetVisitorByDatetimeCount(db))       // get all webpages by datetime
-			analyticalAlertsRoutes.GET("/visitorInfo/count", controllers.GetVisitorInfoCount(db))                      // get all webpages count
+			analyticalAlertsRoutes.GET("/visitorInfo/count/:id", controllers.GetVisitorInfoCount(db))                  // get all webpages count
 
 			keyPairsRoutes := api.Group("/keypairs") // keypairs api group
 			{

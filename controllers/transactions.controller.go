@@ -843,3 +843,36 @@ func Subscribe(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
+
+func UpdateSubscribe(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get the JSON data - only the status
+		var subscription models.SubscriptionModel
+		if err := c.ShouldBindJSON(&subscription); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// query to update the webpage status
+		query := "UPDATE subscription SET plan_id = $1 WHERE project_id = $2"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(subscription.PlanID, subscription.ProjectID)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Subscription updated successfully"})
+
+	}
+}

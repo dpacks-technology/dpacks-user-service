@@ -211,9 +211,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		BillingRoutes := api.Group("/billing") // web api group
 		{
-			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
-			BillingRoutes.POST("/subscription", controllers.Subscribe(db))     // add transaction
-
+			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db))                              // add transaction
 			BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
 			BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
 			BillingRoutes.GET("/profiles/status/:count/:page", controllers.GetBillingProfileByStatus(db))   // get all transactions by status
@@ -222,7 +220,6 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
 			BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
 			BillingRoutes.GET("/profile/check/:web_id", controllers.CheckBillingProfileExists(db))          // get all transactions total
-			BillingRoutes.GET("/subscription/check/:web_id", controllers.CheckSubscriptionExists(db))       // get all transactions total
 
 			BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
 			BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id
@@ -233,14 +230,16 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		}
 
-		SubscriptionRoutes := api.Group("/web") // subscription api group
+		SubscriptionRoutes := api.Group("/subscription") // subscription api group
 		{
-			//SubscriptionRoutes.POST("/subscriptions", middleware.UserAuthMiddleware(), controllers.AddSubscription(db)) // add subscription
-			//SubscriptionRoutes.GET("/subscriptions/:count/:page", controllers.GetSubscriptions(db))                     // get all subscriptions
-			SubscriptionRoutes.GET("/subscription/:id", controllers.GetSubscriptionByID(db))
+			SubscriptionRoutes.POST("/", controllers.Subscribe(db)) // add transaction
 
-			SubscriptionRoutes.DELETE("/subscription/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
+			SubscriptionRoutes.PUT("/", controllers.UpdateSubscribe(db)) // add transaction
 
+			SubscriptionRoutes.GET("/check/:web_id", controllers.CheckSubscriptionExists(db)) // get all transactions total
+			SubscriptionRoutes.GET("/:id", controllers.GetSubscriptionByID(db))
+
+			SubscriptionRoutes.DELETE("/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
 		}
 
 	}

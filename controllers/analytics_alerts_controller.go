@@ -86,7 +86,7 @@ func GetVisitorInfo(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var visitorInfo models.VisitorInfo
-			if err := rows.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source, &visitorInfo.VisitedDate); err != nil {
+			if err := rows.Scan(&visitorInfo.ID, &visitorInfo.IpAddres, &visitorInfo.Device, &visitorInfo.Country, &visitorInfo.Source, &visitorInfo.VisitedDate, &visitorInfo.WebId); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

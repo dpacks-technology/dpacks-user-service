@@ -19,4 +19,5 @@ type VisitorInfo struct {
 	Country     string `json:"country"`
 	Source      string `json:"source"`
 	VisitedDate string `json:"visited_time"`
+	WebId       string `json:"web_id"`
 }

@@ -212,6 +212,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		BillingRoutes := api.Group("/billing") // web api group
 		{
 			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
+			BillingRoutes.POST("/subscription", controllers.Subscribe(db))     // add transaction
 
 			BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
 			BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
@@ -220,6 +221,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			BillingRoutes.GET("/profiles/datetime/:count/:page", controllers.GetBillingProfileDateTime(db)) // get all transactions by datetime
 			BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
 			BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
+			BillingRoutes.GET("/profile/check/:web_id", controllers.CheckBillingProfileExists(db))          // get all transactions total
+			BillingRoutes.GET("/subscription/check/:web_id", controllers.CheckSubscriptionExists(db))       // get all transactions total
 
 			BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
 			BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id

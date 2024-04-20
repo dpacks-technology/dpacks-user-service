@@ -61,7 +61,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			adminUserRoutes.POST("/addAdmin", controllers.AddAdminUser(db)) // add admin
 
 			adminUserRoutes.GET("/admins/:count/:page", controllers.GetAdmins(db))                    // get all admins
-			adminUserRoutes.GET("/admin/:id", controllers.GetAdminById(db))                           // get a admin by id
+			adminUserRoutes.GET("/admin/:id", controllers.GetAdminById(db))                           // get an admin by id
 			adminUserRoutes.GET("/admins/status/:count/:page", controllers.GetAdminsByStatus(db))     // get all admins by status
 			adminUserRoutes.GET("/admins/status/count", controllers.GetAdminsByStatusCount(db))       // get all admins by status
 			adminUserRoutes.GET("/admins/datetime/:count/:page", controllers.GetAdminsByDatetime(db)) // get all admins by datetime
@@ -230,6 +230,17 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
 			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
+
+		}
+
+		SubscriptionRoutes := api.Group("/web") // subscription api group
+		{
+			//SubscriptionRoutes.POST("/subscriptions", middleware.UserAuthMiddleware(), controllers.AddSubscription(db)) // add subscription
+			//SubscriptionRoutes.GET("/subscriptions/:count/:page", controllers.GetSubscriptions(db))                     // get all subscriptions
+			SubscriptionRoutes.GET("/subscription/:id", controllers.GetSubscriptionByID(db))
+
+			SubscriptionRoutes.DELETE("/subscription/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
+
 		}
 
 	}

@@ -314,9 +314,7 @@ func GetBillingProfileByStatus(db *sql.DB) gin.HandlerFunc {
 			case "status":
 				query = "SELECT * FROM billing_profile WHERE company_name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-				//case "path":
-				//	query = "SELECT * FROM webpages WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-				//	args = append(args, escapedVal)
+
 			}
 		}
 
@@ -493,9 +491,7 @@ func GetBillingProfileByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			case "status":
 				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $3 AND date_created BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
-				//case "path":
-				//	query = "SELECT COUNT(*) FROM transactions WHERE path LIKE $3 AND date_created BETWEEN $1 AND $2"
-				//	args = append(args, escapedVal)
+
 			}
 		}
 

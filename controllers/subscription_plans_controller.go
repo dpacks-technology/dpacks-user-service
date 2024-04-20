@@ -13,7 +13,7 @@ func GetSubscriptionPlans(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Query the database for all records
-		rows, err := db.Query("SELECT * FROM subscriptionplans")
+		rows, err := db.Query("SELECT * FROM subscriptionplans ORDER BY plan_id")
 
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -29,7 +29,7 @@ func GetSubscriptionPlans(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var subscriptionPlan models.SubscriptionPlans
-			if err := rows.Scan(&subscriptionPlan.PlanID, &subscriptionPlan.PlanName, &subscriptionPlan.Desc, &subscriptionPlan.Price, &subscriptionPlan.Duration, &subscriptionPlan.Features); err != nil {
+			if err := rows.Scan(&subscriptionPlan.PlanID, &subscriptionPlan.PlanName, &subscriptionPlan.Desc, &subscriptionPlan.Duration, &subscriptionPlan.Features, &subscriptionPlan.MonthlyPrice, &subscriptionPlan.AnnualPrice, &subscriptionPlan.Status); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

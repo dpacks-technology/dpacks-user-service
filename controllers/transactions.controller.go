@@ -3,11 +3,13 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/utils"
 	"dpacks-go-services-template/validators"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +19,7 @@ func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		//userid, _ := c.Get("auth_userId")
+		submitDate := time.Now()
 
 		// get the JSON data
 		var transaction models.TransactionsModel
@@ -45,7 +48,7 @@ func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 
 		// Execute the prepared statement with bound parameters
 		_, err = stmt.Exec(transaction.WebId, transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode,
-			transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.TransactionDate, transaction.CardNumber)
+			transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, submitDate, transaction.CardNumber)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -205,7 +208,7 @@ func GetBillingProfileByStatusCount(db *sql.DB) gin.HandlerFunc {
 
 		case "2":
 			query = "SELECT COUNT(*) FROM billing_profile WHERE status IN ($1)"
-			args = append(args, 0)
+			args = append(args, 2)
 		}
 
 		if val != "" && key != "" {
@@ -214,10 +217,10 @@ func GetBillingProfileByStatusCount(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT * FROM billing_profile WHERE id = $3 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE id = $2 AND status IN ($1)"
 				args = append(args, val)
-			case "status":
-				query = "SELECT * FROM billing_profile WHERE company_name LIKE $3 ORDER BY CASE WHEN status = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+			case "country":
+				query = "SELECT * FROM billing_profile WHERE country LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
 
 			}
@@ -299,7 +302,7 @@ func GetBillingProfileByStatus(db *sql.DB) gin.HandlerFunc {
 
 		case "2":
 			query = "SELECT * FROM billing_profile WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-			args = append(args, 0)
+			args = append(args, 2)
 		}
 
 		if val != "" && key != "" {
@@ -308,13 +311,11 @@ func GetBillingProfileByStatus(db *sql.DB) gin.HandlerFunc {
 
 			switch key {
 			case "id":
-				query = "SELECT * FROM billing_profile WHERE status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-				query = "SELECT * FROM billing_profile WHERE id = $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE id = $2 AND status IN ($1)"
 				args = append(args, val)
-			case "status":
-				query = "SELECT * FROM billing_profile WHERE company_name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+			case "country":
+				query = "SELECT * FROM billing_profile WHERE country LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
-
 			}
 		}
 
@@ -402,7 +403,7 @@ func GetBillingProfileDateTime(db *sql.DB) gin.HandlerFunc {
 		args = append(args, countInt, offset)
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT * FROM billing_profile WHERE date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM billing_profile WHERE transaction_date BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, start, end)
 		}
 
@@ -410,10 +411,10 @@ func GetBillingProfileDateTime(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT * FROM billing_profile WHERE id = $5 AND date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE id = $5 AND transaction_date BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "status":
-				query = "SELECT * FROM billing_profile WHERE status LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM billing_profile WHERE status LIKE $5 AND transaction_date BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 
 			}
@@ -478,7 +479,7 @@ func GetBillingProfileByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		query = "SELECT COUNT(*) FROM billing_profile"
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT COUNT(*) FROM billing_profile WHERE date_created BETWEEN $1 AND $2"
+			query = "SELECT COUNT(*) FROM billing_profile WHERE transaction_date BETWEEN $1 AND $2"
 			args = append(args, start, end)
 		}
 
@@ -486,10 +487,10 @@ func GetBillingProfileByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM billing_profile WHERE id = $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM billing_profile WHERE id = $3 AND transaction_date BETWEEN $1 AND $2"
 				args = append(args, val)
 			case "status":
-				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $3 AND transaction_date BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 
 			}
@@ -838,6 +839,14 @@ func Subscribe(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Send an email to the user
+		err = utils.SendEmail("erandi14908@gmail.com", "Subscription Added", "Your subscription has been added", "small")
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending email"})
+			return
+		}
+
 		// Return a success message
 		c.JSON(http.StatusCreated, gin.H{"message": "Plan added successfully"})
 
@@ -875,4 +884,5 @@ func UpdateSubscribe(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Subscription updated successfully"})
 
 	}
+
 }

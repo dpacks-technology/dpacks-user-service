@@ -94,7 +94,7 @@ func (rl *RateLimit) periodicRefresh() {
 	// This function runs in a separate goroutine
 
 	// Define the refresh interval (e.g., every 30 seconds
-	refreshInterval := 2 * time.Minute
+	refreshInterval := 1 * time.Minute
 
 	// Create a ticker to trigger refresh at regular intervals
 	ticker := time.NewTicker(refreshInterval)

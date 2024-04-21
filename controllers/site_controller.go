@@ -28,7 +28,7 @@ func AddSite(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// insert data
-		query := `INSERT INTO sites (name, description, category, domain, status) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+		query := `INSERT INTO sites (name, description, domain, status) VALUES ($1, $2, $3, $4) RETURNING id`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -38,7 +38,7 @@ func AddSite(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// execute the statement
-		err = stmt.QueryRow(site.Name, site.Description, site.Category, site.Domain, 1).Scan(&site.ID)
+		err = stmt.QueryRow(site.Name, site.Description, site.Domain, 1).Scan(&site.ID)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -84,7 +84,7 @@ func ReadSites(db *sql.DB) gin.HandlerFunc {
 		fmt.Printf("User data: %v, %v, %v, %v, %v\n", userid, userKey, username, status, roles)
 
 		// get data
-		query := `SELECT id, name, description, category, domain, status, last_updated FROM sites, user_site WHERE user_site.site_id = sites.id AND user_site.user_id = $1 ORDER BY seq_id`
+		query := `SELECT id, name, description, domain, status, last_updated FROM sites, user_site WHERE user_site.site_id = sites.id AND user_site.user_id = $1 ORDER BY seq_id`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -104,7 +104,7 @@ func ReadSites(db *sql.DB) gin.HandlerFunc {
 		var sites []models.Site
 		for rows.Next() {
 			var site models.Site
-			err := rows.Scan(&site.ID, &site.Name, &site.Description, &site.Category, &site.Domain, &site.Status, &site.LastUpdated)
+			err := rows.Scan(&site.ID, &site.Name, &site.Description, &site.Domain, &site.Status, &site.LastUpdated)
 			if err != nil {
 				fmt.Printf("%s\n", err)
 				return
@@ -126,7 +126,7 @@ func GetSiteById(db *sql.DB) gin.HandlerFunc {
 		siteId := c.Param("id")
 
 		// get data
-		query := `SELECT name, domain, description, category, status, last_updated FROM sites WHERE id = $1`
+		query := `SELECT name, domain, description, status, last_updated FROM sites WHERE id = $1`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -137,7 +137,7 @@ func GetSiteById(db *sql.DB) gin.HandlerFunc {
 
 		// execute the statement
 		var site models.Site
-		err = stmt.QueryRow(siteId).Scan(&site.Name, &site.Domain, &site.Description, &site.Category, &site.Status, &site.LastUpdated)
+		err = stmt.QueryRow(siteId).Scan(&site.Name, &site.Domain, &site.Description, &site.Status, &site.LastUpdated)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -171,7 +171,7 @@ func EditSite(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// update data
-		query := `UPDATE sites SET name = $1, description = $2, category = $3 WHERE id = $4`
+		query := `UPDATE sites SET name = $1, description = $2 WHERE id = $3`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -181,7 +181,7 @@ func EditSite(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// execute the statement
-		_, err = stmt.Exec(site.Name, site.Description, site.Category, siteId)
+		_, err = stmt.Exec(site.Name, site.Description, siteId)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

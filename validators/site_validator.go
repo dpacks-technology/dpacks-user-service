@@ -32,10 +32,6 @@ func ValidateSite(site models.Site, create bool) error {
 		return errors.New("description cannot exceed 100 characters")
 	}
 
-	if site.Category == "" {
-		return errors.New("category cannot be empty")
-	}
-
 	if create {
 		if site.Name == "" {
 			return errors.New("name cannot be empty")
@@ -65,9 +61,6 @@ func ValidateSite(site models.Site, create bool) error {
 			return errors.New("description cannot exceed 100 characters")
 		}
 
-		if site.Category == "" {
-			return errors.New("category cannot be empty")
-		}
 	}
 
 	return nil

@@ -31,7 +31,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		webRoutes := api.Group("/web") // web api group
 		{
-			webRoutes.POST("/site", controllers.AddSite(db))                                    // add site
+			webRoutes.POST("/site", middleware.UserAuthMiddleware(), controllers.AddSite(db))   // add site
 			webRoutes.GET("/sites", middleware.UserAuthMiddleware(), controllers.ReadSites(db)) // read all sites
 			webRoutes.GET("/site/:id", controllers.GetSiteById(db))                             // read site by id
 			webRoutes.PUT("/site/:id", controllers.EditSite(db))                                // edit site by id
@@ -168,8 +168,6 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			keyPairsRoutes.PUT("/:id", controllers.UpdateKeyPair(db))    // update keypair for the given user id
 			keyPairsRoutes.DELETE("/:id", controllers.DeleteKeyPair(db)) // delete keypair for the given user id
 		}
-
-		
 
 		subscriptionPlansRoutes := api.Group("/subscription_plans") // subscription plans api group
 		{

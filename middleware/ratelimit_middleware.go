@@ -41,8 +41,9 @@ func (rl *RateLimit) Limit() gin.HandlerFunc {
 		rl.mu.Unlock()
 
 		if !found {
-			// No limit found in database (handle accordingly)
-			c.Next()
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": "No such Endpoint, Please try again later.",
+			})
 			return
 		}
 

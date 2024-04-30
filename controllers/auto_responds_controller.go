@@ -622,7 +622,7 @@ func EditAutoResponds(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Message/ updated successfully"})
 
 	}
 }
@@ -653,7 +653,7 @@ func DeleteAutoRespondsID(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Message deleted successfully"})
 
 	}
 }
@@ -690,7 +690,7 @@ func DeleteAutoRespondsByIDBulk(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage bulk deleted successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Message bulk deleted successfully"})
 
 	}
 }
@@ -735,7 +735,7 @@ func UpdateAutoRespondsStatusBulk(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Message status updated successfully"})
 
 	}
 }
@@ -777,7 +777,7 @@ func UpdateAutoRespondsStatus(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Return a success message
-		c.JSON(http.StatusOK, gin.H{"message": "Webpage status updated successfully"})
+		c.JSON(http.StatusOK, gin.H{"message": "Message status updated successfully"})
 
 	}
 }

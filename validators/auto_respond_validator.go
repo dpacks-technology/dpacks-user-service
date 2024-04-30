@@ -8,12 +8,12 @@ import (
 func ValidateMessage(autorespond models.AutoRespond, create bool) error {
 
 	if autorespond.Message == "" {
-		return errors.New("name cannot be empty")
+		return errors.New("Message cannot be empty")
 	}
 
 	if create {
 		if autorespond.Message == "" {
-			return errors.New("path cannot be empty")
+			return errors.New("Message cannot be empty")
 		}
 
 	}

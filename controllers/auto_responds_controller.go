@@ -781,3 +781,51 @@ func UpdateAutoRespondsStatus(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
+
+func GetAutoRespondsByWebID(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		webID := c.Param("webId") // Extract webID from the URL path
+
+		// Build the query to retrieve all autoresponds for the webID
+		query := "SELECT id, message, trigger, last_updated, status FROM automated_messages WHERE webid = $1"
+		args := []interface{}{webID} // Bind the webID parameter
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing the database statement"})
+			return
+		}
+		defer stmt.Close()
+
+		// Execute the prepared statement
+		rows, err := stmt.Query(args...)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing the database query"})
+			return
+		}
+		defer rows.Close() // Close rows after use
+
+		// Scan rows into AutoRespond structs
+		var autoresponds []models.AutoRespond
+
+		for rows.Next() {
+			var autorespond models.AutoRespond
+			err := rows.Scan(&autorespond.ID, &autorespond.Message, &autorespond.Trigger, &autorespond.LastUpdated, &autorespond.Status)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+				return
+			}
+			autoresponds = append(autoresponds, autorespond)
+		}
+
+		// Check for errors after iterating through rows
+		if err := rows.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+			return
+		}
+
+		// Return all autoresponds as JSON
+		c.JSON(http.StatusOK, autoresponds)
+	}
+}

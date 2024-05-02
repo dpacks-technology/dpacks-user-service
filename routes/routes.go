@@ -93,8 +93,9 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			autoRespondRoutes.PUT("/auto_respond/:id/:webId", controllers.EditAutoResponds(db))                // edit AutoResponds by id
 			autoRespondRoutes.PUT("/auto_respond/status/bulk/:id/:webId", controllers.UpdateAutoRespondsStatusBulk(db))
 
-			autoRespondRoutes.DELETE("/auto_respond/:id/:webId", controllers.DeleteAutoRespondsID(db))            // delete AutoResponds by ID
-			autoRespondRoutes.DELETE("/auto_respond/bulk/:id/:webId", controllers.DeleteAutoRespondsByIDBulk(db)) // delete AutoResponds by ID (bulk)
+			autoRespondRoutes.DELETE("/auto_respond/:id/:webId", controllers.DeleteAutoRespondsID(db)) // delete AutoResponds by ID
+			autoRespondRoutes.DELETE("/auto_respond/bulk/:id/:webId", controllers.DeleteAutoRespondsByIDBulk(db))
+			autoRespondRoutes.GET("/auto_respond/get/:webId", controllers.GetAutoRespondsByWebID(db)) // delete AutoResponds by ID (bulk)
 		}
 
 		analyticalAlertsRoutes := api.Group("/analytical_alerts") // analytical alerts api group

@@ -158,7 +158,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
 			analyticalAlertsRoutes.GET("/devices/:id", controllers.GetDevices(db))
 			analyticalAlertsRoutes.GET("/country/:id", controllers.GetCountry(db))
-						analyticalAlertsRoutes.POST("/Alert", controllers.CreateNewAlert(db)) //create new alert
+			analyticalAlertsRoutes.POST("/Alert", controllers.CreateNewAlert(db)) //create new alert
 
 			analyticalAlertsRoutes.GET("/Alerts/:count/:page/:id", controllers.GetAllAlert(db))         // get all alerts
 			analyticalAlertsRoutes.GET("/Alert/:id", controllers.GetAlertbyId(db))                      // get alert by id
@@ -226,7 +226,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 	webContentRoutes.Use(rateLimiter.Limit()) //this also possible
 	webContentRoutes.Use(middleware.AuthMiddleware(db))
 	{
-		webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
+		webContentRoutes.GET("/allSites", controllers.GetAllDpacksSites(db)) // get all webcontent
 		webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 	}
 

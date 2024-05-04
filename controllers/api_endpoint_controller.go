@@ -8,8 +8,8 @@ import (
 	"net/http"
 )
 
-// GetAllWebContents function
-func GetAllWebContents(db *sql.DB) gin.HandlerFunc {
+// GetAllDpacksSites function
+func GetAllDpacksSites(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		query := `SELECT id,name,domain,category from sites`

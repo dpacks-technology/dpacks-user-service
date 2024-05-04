@@ -1,18 +1,13 @@
 package models
 
-import "time"
-
-type TemplateModel struct {
-	Id              int       `json:"id"`
-	Name            string    `json:"name"`
-	Description     string    `json:"description"`
-	Category        string    `json:"category"`
-	MainFile        string    `json:"mainfile"`
-	ThmbnlFile      string    `json:"thmbnlfile"`
-	UserID          int       `json:"userid"`
-	DevpDescription string    `json:"dmessage"`
-	Price           float64   `json:"price"`
-	Sdate           time.Time `json:"submitteddate"`
-	Status          int       `json:"status"`
-	Rating          float64   `json:"rate"`
+type Template struct {
+	TemplId              int    `json:"templId"`
+	TemplName            string `json:"templName"`
+	TemplDescription     string `json:"templDescription"`
+	TemplCategory        string `json:"templCategory"`
+	MainTemplFile        string `json:"mainTemplFile"`
+	ThmbnlTemplFile      string `json:"thmbnlTemplFile"`
+	TemplDevpName        string `json:"templDevpName"`
+	UserID               int    `json:"userID"`
+	TemplDevpDescription string `json:"templDevpDescription"`
 }

@@ -89,7 +89,7 @@ func GetSites(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var site models.Site
-			if err := rows.Scan(&site.ID, &site.SeqID, &site.Name, &site.Domain, &site.Description, &site.Category, &site.Status, &site.LastUpdated); err != nil {
+			if err := rows.Scan(&site.ID, &site.SeqID, &site.Name, &site.Domain, &site.Description, &site.Status, &site.LastUpdated, &site.Category); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -271,7 +271,7 @@ func GetSitesByStatus(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var site models.Site
-			if err := rows.Scan(&site.ID, &site.SeqID, &site.Name, &site.Domain, &site.Description, &site.Category, &site.Status, &site.LastUpdated); err != nil {
+			if err := rows.Scan(&site.ID, &site.SeqID, &site.Name, &site.Domain, &site.Description, &site.Status, &site.LastUpdated, &site.Category); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -376,7 +376,7 @@ func GetSitesByDatetime(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var site models.Site
-			if err := rows.Scan(&site.ID, &site.SeqID, &site.Name, &site.Domain, &site.Description, &site.Category, &site.Status, &site.LastUpdated); err != nil {
+			if err := rows.Scan(&site.ID, &site.SeqID, &site.Name, &site.Domain, &site.Description, &site.Status, &site.LastUpdated, &site.Category); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return

@@ -16,6 +16,8 @@ import (
 func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		//userid, _ := c.Get("auth_userId")
+
 		// get the JSON data
 		var transaction models.TransactionsModel
 		if err := c.ShouldBindJSON(&transaction); err != nil {
@@ -32,7 +34,7 @@ func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// query to insert the transaction
-		query := "INSERT INTO billing_profile ( company_name,street_no,city, postal_code, country, email, payment_method, given_name , last_name, month, year, cvv, terms, transaction_date,card_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10,$11,$12,$13, $14, $15)"
+		query := "INSERT INTO billing_profile ( web_id,company_name,street_no,city, postal_code, country, email, payment_method, given_name , last_name, month, year, cvv, terms, transaction_date,card_number, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,$10,$11,$12,$13, $14, $15,$16, 1)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -42,7 +44,7 @@ func AddBillingProfile(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode,
+		_, err = stmt.Exec(transaction.WebId, transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode,
 			transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.TransactionDate, transaction.CardNumber)
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -129,7 +131,7 @@ func GetBillingProfiles(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var Transactions models.TransactionsModel
-			if err := rows.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
+			if err := rows.Scan(&Transactions.TransactionID, &Transactions.WebId, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -158,13 +160,13 @@ func GetBillingProfileById(db *sql.DB) gin.HandlerFunc {
 		id := c.Param("id")
 
 		// Query the database for a single record
-		row := db.QueryRow("SELECT * FROM billing_profile WHERE id = $1", id)
+		row := db.QueryRow("SELECT * FROM billing_profile WHERE web_id = $1", id)
 
 		// Create a WebpageModel to hold the data
 		var Transactions models.TransactionsModel
 
 		// Scan the row data into the WebpageModel
-		err := row.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber)
+		err := row.Scan(&Transactions.TransactionID, &Transactions.WebId, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
@@ -312,9 +314,7 @@ func GetBillingProfileByStatus(db *sql.DB) gin.HandlerFunc {
 			case "status":
 				query = "SELECT * FROM billing_profile WHERE company_name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
-				//case "path":
-				//	query = "SELECT * FROM webpages WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
-				//	args = append(args, escapedVal)
+
 			}
 		}
 
@@ -340,7 +340,7 @@ func GetBillingProfileByStatus(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var Transactions models.TransactionsModel
-			if err := rows.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
+			if err := rows.Scan(&Transactions.TransactionID, &Transactions.WebId, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -441,7 +441,7 @@ func GetBillingProfileDateTime(db *sql.DB) gin.HandlerFunc {
 
 		for rows.Next() {
 			var Transactions models.TransactionsModel
-			if err := rows.Scan(&Transactions.TransactionID, &Transactions.UserID, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
+			if err := rows.Scan(&Transactions.TransactionID, &Transactions.WebId, &Transactions.CompanyName, &Transactions.StreetNo, &Transactions.City, &Transactions.PostalCode, &Transactions.Country, &Transactions.Email, &Transactions.PaymentMethod, &Transactions.GivenName, &Transactions.LastName, &Transactions.Month, &Transactions.Year, &Transactions.CVV, &Transactions.Terms, &Transactions.TransactionDate, &Transactions.Status, &Transactions.CardNumber); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -491,9 +491,7 @@ func GetBillingProfileByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			case "status":
 				query = "SELECT COUNT(*) FROM billing_profile WHERE status LIKE $3 AND date_created BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
-				//case "path":
-				//	query = "SELECT COUNT(*) FROM transactions WHERE path LIKE $3 AND date_created BETWEEN $1 AND $2"
-				//	args = append(args, escapedVal)
+
 			}
 		}
 
@@ -592,8 +590,11 @@ func EditBillingProfile(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		//print the model
+		fmt.Printf("%s", transaction)
+
 		// Update the billing details
-		_, err := db.Exec("UPDATE billing_profile SET company_name = $1, street_no= $2, city=$3, postal_code= $4, country=$5, email =$6, payment_method=$7, given_name =$8, last_name = $9, month = $10, year = $11, cvv = $12, terms= $13, card_number = #14 WHERE id = $15", transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode, transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.CardNumber, id)
+		_, err := db.Exec("UPDATE billing_profile SET company_name = $1, street_no= $2, city=$3, postal_code= $4, country=$5, email =$6, payment_method=$7, given_name =$8, last_name = $9, month = $10, year = $11, cvv = $12, terms= $13, card_number = $14 WHERE web_id = $15", transaction.CompanyName, transaction.StreetNo, transaction.City, transaction.PostalCode, transaction.Country, transaction.Email, transaction.PaymentMethod, transaction.GivenName, transaction.LastName, transaction.Month, transaction.Year, transaction.CVV, transaction.Terms, transaction.CardNumber, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -748,6 +749,130 @@ func UpdateBillingProfileStatus(db *sql.DB) gin.HandlerFunc {
 
 		// Return a success message
 		c.JSON(http.StatusOK, gin.H{"message": "Transaction updated successfully"})
+
+	}
+}
+
+func CheckBillingProfileExists(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("web_id")
+
+		// Query the database for a single record
+		row := db.QueryRow("SELECT COUNT(*) FROM billing_profile WHERE web_id = $1", id)
+
+		var count int
+
+		// Scan the row data into the WebpageModel
+		err := row.Scan(&count)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+			return
+		}
+
+		// Return the webpage as JSON
+		c.JSON(http.StatusOK, count)
+
+	}
+}
+
+func CheckSubscriptionExists(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get id parameter
+		id := c.Param("web_id")
+
+		// Query the database for a single record
+		row := db.QueryRow("SELECT COUNT(*) FROM subscription WHERE project_id = $1", id)
+
+		var count int
+
+		// Scan the row data into the WebpageModel
+		err := row.Scan(&count)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
+			return
+		}
+
+		// Return the webpage as JSON
+		c.JSON(http.StatusOK, count)
+
+	}
+}
+
+func Subscribe(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get the JSON data
+		var subscription models.SubscriptionModel
+		if err := c.ShouldBindJSON(&subscription); err != nil {
+			fmt.Printf("%s", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Validate the transaction data
+		if err := validators.ValidateSubscription(subscription, true); err != nil {
+			fmt.Printf("%s", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// query to insert the transaction
+		query := "INSERT INTO subscription ( project_id, plan_id ) VALUES ($1, $2)"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(subscription.ProjectID, subscription.PlanID)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusCreated, gin.H{"message": "Plan added successfully"})
+
+	}
+}
+
+func UpdateSubscribe(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		// get the JSON data - only the status
+		var subscription models.SubscriptionModel
+		if err := c.ShouldBindJSON(&subscription); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// query to update the webpage status
+		query := "UPDATE subscription SET plan_id = $1 WHERE project_id = $2"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(subscription.PlanID, subscription.ProjectID)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusOK, gin.H{"message": "Subscription updated successfully"})
 
 	}
 }

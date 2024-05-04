@@ -44,6 +44,25 @@ func AddSite(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		query = `INSERT INTO user_site (user_id, site_id) VALUES ($1, $2)`
+
+		// Prepare the statement
+		stmt, err = db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// get the authenticated user data
+		userid, _ := c.Get("auth_userId")
+
+		// execute the statement
+		_, err = stmt.Exec(userid, site.ID)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
 		// return the response
 		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})
 
@@ -56,16 +75,9 @@ func ReadSites(db *sql.DB) gin.HandlerFunc {
 
 		// get the authenticated user data
 		userid, _ := c.Get("auth_userId")
-		userKey, _ := c.Get("auth_userKey")
-		username, _ := c.Get("auth_username")
-		status, _ := c.Get("auth_status")
-		roles, _ := c.Get("auth_roles")
-
-		// print the user data
-		fmt.Printf("User data: %v, %v, %v, %v, %v\n", userid, userKey, username, status, roles)
 
 		// get data
-		query := `SELECT id, name, description, category, domain, status, last_updated FROM sites ORDER BY seq_id`
+		query := `SELECT id, name, description, category, domain, status, last_updated FROM sites, user_site WHERE user_site.site_id = sites.id AND user_site.user_id = $1 ORDER BY seq_id`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -75,7 +87,7 @@ func ReadSites(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// execute the statement
-		rows, err := stmt.Query()
+		rows, err := stmt.Query(userid)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

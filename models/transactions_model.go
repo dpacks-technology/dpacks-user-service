@@ -4,7 +4,7 @@ import "time"
 
 type TransactionsModel struct {
 	TransactionID   int       `json:"id"`
-	UserID          int       `json:"user_id"`
+	WebId           string    `json:"web_id"`
 	CompanyName     string    `json:"company_name"`
 	StreetNo        string    `json:"street_no"`
 	City            string    `json:"city"`

@@ -21,7 +21,7 @@ jobs:
           gcloud compute ssh instance-20240404-044314 --zone=asia-south1-a --command="
             sudo git clone -b release https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_ACCESS_TOKEN }}@github.com/dpacks-technology/dpacks-user-service.git ./user
             cd user
-            sudo git fetch origin && sudo git pull origin main
+            sudo git fetch origin && sudo git pull origin release
             echo 'DB_HOST=${{ secrets.DB_HOST }}' | sudo tee .env
             echo 'DB_PORT=${{ secrets.DB_PORT }}' | sudo tee -a .env
             echo 'DB_USER=${{ secrets.DB_USER }}' | sudo tee -a .env

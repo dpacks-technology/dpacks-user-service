@@ -128,21 +128,22 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		autoRespondRoutes := api.Group("/chat") // auto respond api group
 		{
-			autoRespondRoutes.GET("/auto_respond/:count/:page", controllers.GetAutoResponds(db)) // get all auto responds
-			autoRespondRoutes.POST("/auto_respond", controllers.AddAutoRespond(db))
-			autoRespondRoutes.GET("/auto_respond/id/:id", controllers.GetAutoRespondsById(db))                      // get a webpage by id
-			autoRespondRoutes.GET("/auto_respond/status/:count/:page", controllers.GetAutoRespondsByStatus(db))     // get all webpages by status
-			autoRespondRoutes.GET("/auto_respond/status/count", controllers.GetAutoRespondsByStatusCount(db))       // get all webpages by status
-			autoRespondRoutes.GET("/auto_respond/datetime/:count/:page", controllers.GetAutoRespondsByDatetime(db)) // get all webpages by datetime
-			autoRespondRoutes.GET("/auto_respond/datetime/count", controllers.GetAutoRespondsByDatetimeCount(db))   // get all webpages by datetime
-			autoRespondRoutes.GET("/auto_respond/count", controllers.GetAutoRespondsCount(db))                      // get all webpages count
+			autoRespondRoutes.GET("/auto_respond/:count/:page/:webId", controllers.GetAutoResponds(db)) //Get a list of auto-responses with pagination and webId filtering
+			autoRespondRoutes.POST("/auto_respond/:webId", controllers.AddAutoRespond(db))
+			autoRespondRoutes.GET("/auto_respond/id/:id/:webId", controllers.GetAutoRespondsById(db))                      // get a AutoResponds by id
+			autoRespondRoutes.GET("/auto_respond/status/:count/:page/:webId", controllers.GetAutoRespondsByStatus(db))     // get all AutoResponds by status
+			autoRespondRoutes.GET("/auto_respond/status/count/:webId", controllers.GetAutoRespondsByStatusCount(db))       // get all AutoResponds by status
+			autoRespondRoutes.GET("/auto_respond/datetime/:count/:page/:webId", controllers.GetAutoRespondsByDatetime(db)) // get all AutoResponds by datetime
+			autoRespondRoutes.GET("/auto_respond/datetime/count/:webId", controllers.GetAutoRespondsByDatetimeCount(db))   // get all AutoResponds by datetime
+			autoRespondRoutes.GET("/auto_respond/count/:webId", controllers.GetAutoRespondsCount(db))                      // get all AutoResponds count
 
-			autoRespondRoutes.PUT("/auto_respond/status/:id", controllers.UpdateAutoRespondsStatus(db)) // update webpage status by id
-			autoRespondRoutes.PUT("/auto_respond/:id", controllers.EditAutoResponds(db))                // edit webpage by id
-			autoRespondRoutes.PUT("/auto_respond/status/bulk/:id", controllers.UpdateAutoRespondsStatusBulk(db))
+			autoRespondRoutes.PUT("/auto_respond/status/:id/:webId", controllers.UpdateAutoRespondsStatus(db)) // update AutoResponds status by id
+			autoRespondRoutes.PUT("/auto_respond/:id/:webId", controllers.EditAutoResponds(db))                // edit AutoResponds by id
+			autoRespondRoutes.PUT("/auto_respond/status/bulk/:id/:webId", controllers.UpdateAutoRespondsStatusBulk(db))
 
-			autoRespondRoutes.DELETE("/auto_respond/:id", controllers.DeleteAutoRespondsID(db))            // delete webpage by ID
-			autoRespondRoutes.DELETE("/auto_respond/bulk/:id", controllers.DeleteAutoRespondsByIDBulk(db)) // delete webpage by ID (bulk)
+			autoRespondRoutes.DELETE("/auto_respond/:id/:webId", controllers.DeleteAutoRespondsID(db)) // delete AutoResponds by ID
+			autoRespondRoutes.DELETE("/auto_respond/bulk/:id/:webId", controllers.DeleteAutoRespondsByIDBulk(db))
+			autoRespondRoutes.GET("/auto_respond/get/:webId", controllers.GetAutoRespondsByWebID(db)) // delete AutoResponds by ID (bulk)
 		}
 
 		analyticalAlertsRoutes := api.Group("/analytics") // analytical alerts api group
@@ -299,7 +300,6 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
 		BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-
 	}
 
 	SubscriptionRoutes := api.Group("/subscription") // subscription api group

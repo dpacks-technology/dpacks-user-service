@@ -6,4 +6,5 @@ type AutoRespond struct {
 	Trigger     string `json:"trigger"`
 	LastUpdated string `json:"last_updated"`
 	Status      int    `json:"status"`
+	WebID       string `json:"webid"`
 }

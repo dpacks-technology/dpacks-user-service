@@ -56,10 +56,11 @@ func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 		limit := c.Param("limit")
 
 		//this is dummy site id used to demonstrate our system is can have 1m data at time
+		//WHERE site NOT IN ('6fa3aa36-04b5-4a1d-b426-d3c76d87ff12')
+
 		query := `SELECT dp.site, dp.page, dp.element, st.domain
 					from data_packets dp
 					INNER JOIN sites st ON dp.site = st.id::text
-					WHERE site NOT IN ('6fa3aa36-04b5-4a1d-b426-d3c76d87ff12')
 					GROUP BY dp.site, dp.page, dp.element, st.domain, dp.last_updated
 					ORDER BY dp.last_updated DESC LIMIT $1`
 

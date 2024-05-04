@@ -78,6 +78,11 @@ func (rl *RateLimit) Limit() gin.HandlerFunc {
 
 			// Check allowance without waiting (using a non-blocking approach)
 			if !limiter.Allow() {
+
+				//log the message
+				log.Println("Rate limit exceeded")
+
+				// If the rate limit is exceeded, return a 429 Too Many Requests error
 				c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 					"error": "Rate limit exceeded for this resource. Please try again later.",
 				})

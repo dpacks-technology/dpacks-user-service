@@ -58,29 +58,29 @@ func GetSubscriptionPlans(db *sql.DB) gin.HandlerFunc {
 
 // AddExample handles POST /api/example - CREATE
 
-func AddSubscriptionplan(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		// Create an empty ExampleModel struct
-		var transactions models.transaction
-
-		// Bind the JSON to the ExampleModel struct
-		if err := c.BindJSON(&transactions); err != nil {
-			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Error binding JSON"})
-			return
-		}
-
-		// Insert the record into the database
-		_, err := db.Exec("INSERT INTO transactions (column2, column3, new_column) VALUES ($1, $2, $3)", example.Column1, example.Column2, example.Column3)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
-			return
-		}
-
-		// Return the example as JSON
-		c.JSON(http.StatusOK, example)
-
-	}
-}
+//func AddSubscriptionplan(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//
+//		// Create an empty ExampleModel struct
+//		var transactions models.transaction
+//
+//		// Bind the JSON to the ExampleModel struct
+//		if err := c.BindJSON(&transactions); err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusBadRequest, gin.H{"error": "Error binding JSON"})
+//			return
+//		}
+//
+//		// Insert the record into the database
+//		_, err := db.Exec("INSERT INTO transactions (column2, column3, new_column) VALUES ($1, $2, $3)", example.Column1, example.Column2, example.Column3)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting into the database"})
+//			return
+//		}
+//
+//		// Return the example as JSON
+//		c.JSON(http.StatusOK, example)
+//
+//	}
+//}

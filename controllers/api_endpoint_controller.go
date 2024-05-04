@@ -13,7 +13,6 @@ import (
 // GetAllDpacksSites function
 func GetAllDpacksSites(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		query := `SELECT id,name,domain,category from sites`
 
 		stmt, err := db.Prepare(query)
@@ -53,7 +52,9 @@ func GetAllDpacksSites(db *sql.DB) gin.HandlerFunc {
 func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		// Get the limit from the URL
 		limit := c.Param("limit")
+
 		//this is dummy site id used to demonstrate our system is can have 1m data at time
 		query := `SELECT dp.site, dp.page, dp.element, st.domain
 					from data_packets dp
@@ -62,22 +63,27 @@ func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 					GROUP BY dp.site, dp.page, dp.element, st.domain, dp.last_updated
 					ORDER BY dp.last_updated DESC LIMIT $1`
 
+		//prepare statement
 		stmt, err := db.Prepare(query)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
+		//close the statement when the surrounding function returns(handler function)
 		defer stmt.Close()
 
+		//execute the statement
 		rows, err := stmt.Query(limit)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
 		}
 
+		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
+		// Iterate over the rows and scan them into variables
 		var updatedData []json.RawMessage
 		for rows.Next() {
 			var SiteID string
@@ -86,19 +92,21 @@ func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 			var Domain string
 			err := rows.Scan(&SiteID, &Page, &Element, &Domain)
 			if err != nil {
-				fmt.Printf("%s\n", " happend here")
+				fmt.Printf("%s\n", err)
 				return
 			}
-			//dataPackets = append(dataPackets, dataPacket)
 
+			// endpoint to fetch data packets from cassandra
 			url := fmt.Sprintf("https://web.dpacks.net/api/v1/data-packets/fetch/%s/%s/%s", SiteID, Page, Element)
 
+			// Make a GET request to the endpoint
 			response, err := doGetRequest(url)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
+			// Unmarshal the response into a data
 			var data json.RawMessage
 			err = json.Unmarshal(response, &data)
 			if err != nil {
@@ -109,7 +117,7 @@ func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 			// Create a map to hold domain name and data
 			domainData := map[string]interface{}{
 				"domain": Domain,
-				"data":   data,
+				"data":   response,
 			}
 
 			// Marshal the map into JSON
@@ -123,7 +131,6 @@ func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(200, updatedData)
-		//c.JSON(200, dataPackets)
 
 	}
 }

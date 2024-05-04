@@ -4,17 +4,16 @@ import (
 	"database/sql"
 	"dpacks-go-services-template/models"
 	"fmt"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
-// GetWebPages handles GET /api/web/pages/ - READ
-func GetWebPages(db *sql.DB) gin.HandlerFunc {
+// GetKeyPairs function
+func GetKeyPairs(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Query the database for all records
-		rows, err := db.Query("SELECT * FROM webpages")
+		rows, err := db.Query("SELECT * FROM keypairs")
 
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -25,17 +24,17 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
-		var webpages []models.WebpageModel
+		// Iterate over the rows and scan them into KeyPairs structs
+		var keypairs []models.KeyPairs
 
 		for rows.Next() {
-			var webpage models.WebpageModel
-			if err := rows.Scan(&webpage.ID, &webpage.Name, &webpage.WebID, &webpage.Path); err != nil {
+			var keypair models.KeyPairs
+			if err := rows.Scan(&keypair.ID, &keypair.UserID, &keypair.ClientID, &keypair.Key); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
 			}
-			webpages = append(webpages, webpage)
+			keypairs = append(keypairs, keypair)
 		}
 
 		//this runs only when loop didn't work
@@ -45,8 +44,8 @@ func GetWebPages(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
-		c.JSON(http.StatusOK, webpages)
+		// Return all keypairs as JSON
+		c.JSON(http.StatusOK, keypairs)
 
 	}
 }

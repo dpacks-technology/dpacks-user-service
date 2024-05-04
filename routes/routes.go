@@ -55,6 +55,13 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webRoutes.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
+		adminDashboardRoutes := api.Group("/admin_dashboard") // admin dashboard api group
+		{
+			adminDashboardRoutes.GET("/usersTotalCount", controllers.GetTotalUserCount(db)) // get total user count
+			adminDashboardRoutes.GET("/websitesTotalCount", controllers.GetTotalWebsitesCount(db))
+			adminDashboardRoutes.GET("/apiSubscribersTotalCount", controllers.GetTotalApiSubscribersCount(db))
+			adminDashboardRoutes.GET("/marketplaceUsersTotalCount", controllers.GetTotalMarketplaceUsersCount(db))
+		}
 		adminUserRoutes := api.Group("/admin_user") // admin user api group
 		{
 
@@ -158,7 +165,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			analyticalAlertsRoutes.GET("/sessions/:id", controllers.GetSessions(db))
 			analyticalAlertsRoutes.GET("/devices/:id", controllers.GetDevices(db))
 			analyticalAlertsRoutes.GET("/country/:id", controllers.GetCountry(db))
-						analyticalAlertsRoutes.POST("/Alert", controllers.CreateNewAlert(db)) //create new alert
+			analyticalAlertsRoutes.POST("/Alert", controllers.CreateNewAlert(db)) //create new alert
 
 			analyticalAlertsRoutes.GET("/Alerts/:count/:page/:id", controllers.GetAllAlert(db))         // get all alerts
 			analyticalAlertsRoutes.GET("/Alert/:id", controllers.GetAlertbyId(db))                      // get alert by id

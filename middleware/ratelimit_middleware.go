@@ -3,6 +3,8 @@ package middleware
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -11,12 +13,14 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// creating ratelimit struct
 type RateLimit struct {
 	mu       sync.Mutex
 	limiters map[string]*rate.Limiter
 	db       *sql.DB
 }
 
+// creating  ratelimit instance
 func NewRateLimit(db *sql.DB) (*RateLimit, error) {
 	rl := &RateLimit{limiters: make(map[string]*rate.Limiter), db: db}
 	// Fetch initial limits from database on creation
@@ -31,44 +35,75 @@ func NewRateLimit(db *sql.DB) (*RateLimit, error) {
 	return rl, nil
 }
 
+// creating limit function
 func (rl *RateLimit) Limit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var path string
 		path = c.FullPath() // Use FullPath method to get the complete path
+		// Log the path
+		log.Println("path: ", path)
 
 		rl.mu.Lock()
 		limiter, found := rl.limiters[path]
 		rl.mu.Unlock()
 
+		// If the path is not found in the map, return a 404 Not Found error
 		if !found {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+			//log the message
+			log.Println("No such Endpoint")
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 				"error": "No such Endpoint, Please try again later.",
 			})
 			return
 		}
 
-		// Check allowance without waiting (using a non-blocking approach)
-		if !limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded for this resource. Please try again later.",
+		// Check the status of the endpoint
+		var limitModel models.Endpoint
+		limitModel.Status, _ = rl.statusCheck(path)
+
+		// Check if the endpoint is enabled or disabled
+		if limitModel.Status == 0 {
+			//log the message
+			log.Println("Endpoint is disabled")
+
+			// Return a message to display this endpoint is not working
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error": "Endpoint Currently Disabled. Please try again later.",
 			})
+
 			return
+		} else {
+			//log the message
+			log.Println("Endpoint is enabled")
+
+			// Check allowance without waiting (using a non-blocking approach)
+			if !limiter.Allow() {
+				c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+					"error": "Rate limit exceeded for this resource. Please try again later.",
+				})
+				return
+			}
+			// Call the next handler if the rate limit is not exceeded
+			c.Next()
 		}
 
-		c.Next()
 	}
 }
 
+// function to Update the rate limiters from the database
 func (rl *RateLimit) updateLimitsFromDatabase() error {
+	// Query the database for the rate limits
 	rows, err := rl.db.Query("SELECT path, ratelimit FROM api_endpoints")
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
+	// Create a map to store the rate limiters
 	limits := make(map[string]*rate.Limiter)
-	for rows.Next() {
 
+	// Iterate over the rows and scan them into the Endpoint struct
+	for rows.Next() {
 		//using model
 		var limitModel models.Endpoint
 
@@ -76,6 +111,7 @@ func (rl *RateLimit) updateLimitsFromDatabase() error {
 		if err != nil {
 			return err
 		}
+		// Create a new rate limiter for the path
 		limits[limitModel.Path] = rate.NewLimiter(rate.Every(time.Minute), limitModel.Limit) // Adjust rate as needed
 	}
 
@@ -85,6 +121,49 @@ func (rl *RateLimit) updateLimitsFromDatabase() error {
 	rl.mu.Unlock()
 
 	return nil
+}
+
+// function to check the status of the endpoint
+func (rl *RateLimit) statusCheck(path string) (int, error) {
+	// Check if the endpoint is enabled or disabled
+	// Query the database for the status of the endpoint
+	query := "SELECT status FROM api_endpoints WHERE path = $1"
+
+	// Prepare the statement
+	stmt, err := rl.db.Prepare(query)
+	if err != nil {
+		fmt.Printf("%s\n", "Error preparing the query")
+		return 0, err
+	}
+
+	// Close the statement when the surrounding function returns (handler function)
+	defer stmt.Close()
+
+	// Execute the statement
+	row, err := stmt.Query(path)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return 0, err
+	}
+
+	// Close the rows when the surrounding function returns (handler function)
+	defer row.Close()
+
+	// Create a model to store the status of the endpoint
+	var limitModel models.Endpoint
+
+	// Iterate over the rows and scan them into the Endpoint struct
+	for row.Next() {
+		err := row.Scan(&limitModel.Status)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return 0, err
+		}
+	}
+
+	// Return the status of the endpoint
+	return limitModel.Status, err
+
 }
 
 // Periodically refresh rate limits from the database

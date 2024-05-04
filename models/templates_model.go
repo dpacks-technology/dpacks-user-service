@@ -14,7 +14,5 @@ type TemplateModel struct {
 	Price           float64   `json:"price"`
 	Sdate           time.Time `json:"submitteddate"`
 	Status          int       `json:"status"`
-	Rating          int       `json:"rate"`
-	TotalRatings    int       `json:"total_ratings"`
-	RatingCount     int       `json:"rating_count"`
+	Rating          float64   `json:"rate"`
 }

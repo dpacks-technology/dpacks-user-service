@@ -118,27 +118,26 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		templateRoutes := api.Group("/marketplace") // marketplace api group
 		{
-			templateRoutes.POST("/template", controllers.AddTemplate(db)) // add webpage
-			templateRoutes.POST("/template/rating", controllers.AddTemplateRatings(db))
+			templateRoutes.POST("/template", middleware.UserAuthMiddleware(), controllers.AddTemplate(db))                 // add new template
+			templateRoutes.POST("/template/rating", middleware.UserAuthMiddleware(), controllers.AddRatings(db))           // add new template rating
+			templateRoutes.POST("/template/upload", middleware.UserAuthMiddleware(), controllers.UploadTemplate(db))       // upload template
+			templateRoutes.POST("/template/image/upload", middleware.UserAuthMiddleware(), controllers.UploadThumbImg(db)) // upload template thumbnail image
 
-			templateRoutes.GET("/templates/:count/:page", controllers.GetTemplates(db))                    // get all
-			templateRoutes.GET("/template/:id", controllers.GetTemplatesById(db))                          // get by id
-			templateRoutes.GET("/templates/status/:count/:page", controllers.GetTemplatesByStatus(db))     // get all by status
-			templateRoutes.GET("/templates/status/count", controllers.GetTemplatesByStatusCount(db))       // get all by status
-			templateRoutes.GET("/templates/datetime/:count/:page", controllers.GetTemplatesByDatetime(db)) // get all by datetime
-			templateRoutes.GET("/templates/datetime/count", controllers.GetTemplatesByDatetimeCount(db))   // get all by datetime
-			templateRoutes.GET("/templates/count", controllers.GetTemplatesCount(db))
-			templateRoutes.GET("/templat/:id", controllers.DownloadById(db))
-			templateRoutes.GET("/templates/user/:count/:page", controllers.GetTemplatesBydid(db))
-			templateRoutes.GET("/templates/acceptstatus/:count/:page", controllers.GetAcceptedTemplates(db))
-			templateRoutes.GET("/templates/search/:count/:page", controllers.GetbySearchListingPage(db))
-			//templateRoutes.GET("/templates/sumcount", controllers.GetRatingSumAndCount(db))
+			templateRoutes.GET("/templates/:count/:page", controllers.GetTemplates(db))                                            // get all
+			templateRoutes.GET("/template/:id", controllers.GetTemplatesById(db))                                                  // get by id
+			templateRoutes.GET("/templates/status/:count/:page", controllers.GetTemplatesByStatus(db))                             // get all by status
+			templateRoutes.GET("/templates/status/count", controllers.GetTemplatesByStatusCount(db))                               // get all by status
+			templateRoutes.GET("/templates/datetime/:count/:page", controllers.GetTemplatesByDatetime(db))                         // get all by datetime
+			templateRoutes.GET("/templates/datetime/count", controllers.GetTemplatesByDatetimeCount(db))                           // get all by datetime
+			templateRoutes.GET("/templates/count", controllers.GetTemplatesCount(db))                                              // get all count
+			templateRoutes.GET("/templat/:id", controllers.DownloadById(db))                                                       // download templates by id
+			templateRoutes.GET("/templates/user/:count/:page", middleware.UserAuthMiddleware(), controllers.GetTemplatesBydid(db)) // get all templates by user id
+			templateRoutes.GET("/templates/acceptstatus/:count/:page", controllers.GetAcceptedTemplates(db))                       // get all the accepted templates
+			templateRoutes.GET("/templates/filter/:count/:page/:category", controllers.GetTemplatesByCategory(db))                 // filter function
 
-			// get all count
-
-			templateRoutes.PUT("/templates/status/:id", controllers.UpdateTemplatesStatus(db))          // update status by id
-			templateRoutes.PUT("/templates/:id", controllers.EditTemplatesD(db))                        // edit by id
-			templateRoutes.PUT("/templates/status/bulk/:id", controllers.UpdateTemplatesStatusBulk(db)) // update status by id (bulk)
+			templateRoutes.PUT("/templates/status/:id", controllers.UpdateTemplatesStatus(db))                    // update status by id
+			templateRoutes.PUT("/templates/:id", middleware.UserAuthMiddleware(), controllers.EditTemplatesD(db)) // edit template details by id
+			templateRoutes.PUT("/templates/status/bulk/:id", controllers.UpdateTemplatesStatusBulk(db))           // update status by id (bulk)
 
 			templateRoutes.DELETE("/templates/:id", controllers.DeleteTemplateByID(db))          // delete by ID
 			templateRoutes.DELETE("/templates/bulk/:id", controllers.DeleteTemplateByIDBulk(db)) // delete by ID (bulk)
@@ -149,7 +148,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
-    
+
 		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
 		{
 
@@ -179,9 +178,8 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
 			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
 		}
-    
-    
-    BillingRoutes := api.Group("/billing") // web api group
+
+		BillingRoutes := api.Group("/billing") // web api group
 		{
 			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
 
@@ -199,7 +197,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
 			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-    }
-    
+		}
+
 	}
 }

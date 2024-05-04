@@ -3,11 +3,13 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/utils"
 	"dpacks-go-services-template/validators"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +17,8 @@ import (
 // AddTemplate handles POST /api/marketplace/template - CREATE
 func AddTemplate(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		userid, _ := c.Get("auth_userId")
 
 		// get the JSON data
 		var template models.TemplateModel
@@ -30,8 +34,12 @@ func AddTemplate(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		submittedDate := time.Now()
+
+		mainFileLink := "https://storage.googleapis.com/dpacks-templates.appspot.com/" + template.MainFile
+
 		// query to insert the template
-		query := "INSERT INTO templates (name, description, category, mainfile, thmbnlfile, dmessage, price, submitteddate, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+		query := "INSERT INTO templates (name, description, category, mainfile, thmbnlfile, userid, dmessage, price, submitteddate, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -41,7 +49,7 @@ func AddTemplate(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(template.Name, template.Description, template.Category, template.MainFile, template.ThmbnlFile, template.DevpDescription, template.Price, template.Sdate, 0)
+		_, err = stmt.Exec(template.Name, template.Description, template.Category, mainFileLink, template.ThmbnlFile, userid, template.DevpDescription, template.Price, submittedDate, 0)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -53,7 +61,7 @@ func AddTemplate(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// GetTemplates handles GET /api/web/webpages/status/:status/count - READ
+// GetTemplates handles GET /api/templates/:count/:page - READ
 func GetTemplates(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -125,7 +133,7 @@ func GetTemplates(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
+		// Iterate over the rows and scan them into TemplateModel structs
 		var templates []models.TemplateModel
 
 		for rows.Next() {
@@ -145,12 +153,13 @@ func GetTemplates(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
+		// Return all templates as JSON
 		c.JSON(http.StatusOK, templates)
 
 	}
 }
 
+// GetTemplatesCount handles GET /api/templates/count - READ
 func GetTemplatesCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -197,13 +206,13 @@ func GetTemplatesCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
-		// Return all webpages as JSON
+		// Return all templates as JSON
 		c.JSON(http.StatusOK, count)
 
 	}
 }
 
-// GetWebPagesByStatusCount handles GET /api/web/webpages/status/:status/count - READ
+// GetTemplatesByStatusCount handles GET /api/templates/status/count - READ
 func GetTemplatesByStatusCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -243,7 +252,7 @@ func GetTemplatesByStatusCount(db *sql.DB) gin.HandlerFunc {
 				query = "SELECT COUNT(*) FROM templates WHERE name LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
 			case "category":
-				query = "SELECT COUNT(*) FROM templates WHERE path LIKE $2 AND status IN ($1)"
+				query = "SELECT COUNT(*) FROM templates WHERE category LIKE $2 AND status IN ($1)"
 				args = append(args, escapedVal)
 			}
 		}
@@ -273,7 +282,7 @@ func GetTemplatesByStatusCount(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// GetWebPagesByStatus handles GET /api/web/webpages/status/:status - READ
+// GetTemplatesByStatus handles GET /api/templates/status/:count/:page - READ
 func GetTemplatesByStatus(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -339,7 +348,7 @@ func GetTemplatesByStatus(db *sql.DB) gin.HandlerFunc {
 				query = "SELECT * FROM templates WHERE name LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			case "category":
-				query = "SELECT * FROM templates WHERE path LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM templates WHERE category LIKE $4 AND status IN ($3) ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -361,7 +370,7 @@ func GetTemplatesByStatus(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
+		// Iterate over the rows and scan them into TemplateModel structs
 		var templates []models.TemplateModel
 
 		for rows.Next() {
@@ -381,12 +390,13 @@ func GetTemplatesByStatus(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
+		// Return all templates as JSON
 		c.JSON(http.StatusOK, templates)
 
 	}
 }
 
+// GetTemplatesByDatetime handles GET /api/templates/datetime/:count/:page - READ
 func GetTemplatesByDatetime(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -427,7 +437,7 @@ func GetTemplatesByDatetime(db *sql.DB) gin.HandlerFunc {
 		args = append(args, countInt, offset)
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT * FROM templates WHERE date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+			query = "SELECT * FROM templates WHERE submitteddate BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 			args = append(args, start, end)
 		}
 
@@ -435,13 +445,13 @@ func GetTemplatesByDatetime(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT * FROM templates WHERE id = $5 AND date_created BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM templates WHERE id = $5 AND submitteddate BETWEEN $3 AND $4 ORDER BY id LIMIT $1 OFFSET $2"
 				args = append(args, val)
 			case "name":
-				query = "SELECT * FROM templates WHERE name LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM templates WHERE name LIKE $5 AND submitteddate BETWEEN $3 AND $4 ORDER BY CASE WHEN name = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			case "category":
-				query = "SELECT * FROM templates WHERE path LIKE $5 AND date_created BETWEEN $3 AND $4 ORDER BY CASE WHEN path = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
+				query = "SELECT * FROM templates WHERE category LIKE $5 AND submitteddate BETWEEN $3 AND $4 ORDER BY CASE WHEN category = $5 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -463,7 +473,7 @@ func GetTemplatesByDatetime(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
+		// Iterate over the rows and scan them into TemplateModel structs
 		var templates []models.TemplateModel
 
 		for rows.Next() {
@@ -483,13 +493,13 @@ func GetTemplatesByDatetime(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return all webpages as JSON
+		// Return all templates as JSON
 		c.JSON(http.StatusOK, templates)
 
 	}
 }
 
-// GetWebPagesByDatetimeCount handles GET /api/web/webpages/datetime/count - READ
+// GetTemplatesByDatetimeCount handles GET /api/web/templates/datetime/count - READ
 func GetTemplatesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -505,7 +515,7 @@ func GetTemplatesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		query = "SELECT COUNT(*) FROM templates"
 
 		if start != "" && end != "" && val != "null" && key != "null" {
-			query = "SELECT COUNT(*) FROM templates WHERE date_created BETWEEN $1 AND $2"
+			query = "SELECT COUNT(*) FROM templates WHERE submitteddate BETWEEN $1 AND $2"
 			args = append(args, start, end)
 		}
 
@@ -513,13 +523,13 @@ func GetTemplatesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
 			switch key {
 			case "id":
-				query = "SELECT COUNT(*) FROM templates WHERE id = $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM templates WHERE id = $3 AND submitteddate BETWEEN $1 AND $2"
 				args = append(args, val)
 			case "name":
-				query = "SELECT COUNT(*) FROM templates WHERE name LIKE $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM templates WHERE name LIKE $3 AND submitteddate BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			case "category":
-				query = "SELECT COUNT(*) FROM templates WHERE path LIKE $3 AND date_created BETWEEN $1 AND $2"
+				query = "SELECT COUNT(*) FROM templates WHERE category LIKE $3 AND submitteddate BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			}
 		}
@@ -543,13 +553,13 @@ func GetTemplatesByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
-		// Return all webpages as JSON
+		// Return all templates as JSON
 		c.JSON(http.StatusOK, count)
 
 	}
 }
 
-// UpdateWebPageStatus handles PUT /api/web/webpages/status/:id - UPDATE
+// UpdateTemplatesStatus handles PUT /api/templates/status/:id - UPDATE
 func UpdateTemplatesStatus(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -563,7 +573,7 @@ func UpdateTemplatesStatus(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// query to update the webpage status
+		// query to update the template status
 		query := "UPDATE templates SET status = $1 WHERE id = $2"
 
 		// Prepare the statement
@@ -580,13 +590,21 @@ func UpdateTemplatesStatus(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Send email notification to the user
+		err = utils.SendEmail("ishini.aponso1230@gmail.com", "New template status change.", "The status of your newly added template has been changed by the marketplace admin. Please check your template.", "small")
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending email"})
+			return
+		}
+
 		// Return a success message
 		c.JSON(http.StatusOK, gin.H{"message": "Template status updated successfully"})
 
 	}
 }
 
-// UpdateWebPageStatusBulk handles PUT /api/web/webpages/status/bulk/:id - UPDATE
+// UpdateTemplatesStatusBulk handles PUT /api/templates/status/bulk/:id - UPDATE
 func UpdateTemplatesStatusBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -603,7 +621,7 @@ func UpdateTemplatesStatusBulk(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Update the webpage status in the database
+		// Update the template status in the database
 		for _, id := range ids {
 
 			query := "UPDATE templates SET status = $1 WHERE id = $2"
@@ -630,6 +648,7 @@ func UpdateTemplatesStatusBulk(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+// EditTemplatesD handles PUT /api/templates/:id - UPDATE
 func EditTemplatesD(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -643,14 +662,14 @@ func EditTemplatesD(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Validate the webpage data
-		//if err := validators.ValidateTemp(template, false); err != nil {
-		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		//	return
-		//}
+		//Validate the template data
+		if err := validators.ValidateTempEdit(template, false); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
-		// Update the webpage in the database
-		_, err := db.Exec("UPDATE templates SET description = $1, category = $2, dmessage = $3  WHERE id = $4", template.Description, template.Category, template.DevpDescription, id)
+		// Update the template in the database
+		_, err := db.Exec("UPDATE templates SET name = $1, description = $2, category = $3, dmessage = $4  WHERE id = $5", template.Name, template.Description, template.Category, template.DevpDescription, id)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return
@@ -662,14 +681,14 @@ func EditTemplatesD(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// DeleteWebPageByID handles DELETE /api/web/webpages/:id - DELETE
+// DeleteTemplateByID handles DELETE /api/templates/:id - DELETE
 func DeleteTemplateByID(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// get id parameter
 		id := c.Param("id")
 
-		// query to delete the webpage
+		// query to delete the template
 		query := "DELETE FROM templates WHERE id = $1"
 
 		// Prepare the statement
@@ -692,7 +711,7 @@ func DeleteTemplateByID(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// DeleteWebPageByIDBulk handles DELETE /api/web/webpages/bulk/:id - DELETE
+// DeleteTemplateByIDBulk handles DELETE /api/templates/bulk/:id - DELETE
 func DeleteTemplateByIDBulk(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -702,9 +721,9 @@ func DeleteTemplateByIDBulk(db *sql.DB) gin.HandlerFunc {
 		// Convert the string of ids to an array of ids
 		ids := strings.Split(id, ",")
 
-		// Delete the webpage from the database
+		// Delete the template from the database
 		for _, id := range ids {
-			// query to delete the webpage
+			// query to delete the template
 			query := "DELETE FROM templates WHERE id = $1"
 
 			// Prepare the statement
@@ -728,7 +747,7 @@ func DeleteTemplateByIDBulk(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// GetWebPageById handles GET /api/web/webpages/:id - READ
+// GetTemplatesById handles GET /api/template/:id - READ
 func GetTemplatesById(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -738,10 +757,10 @@ func GetTemplatesById(db *sql.DB) gin.HandlerFunc {
 		// Query the database for a single record
 		row := db.QueryRow("SELECT * FROM templates WHERE id = $1", id)
 
-		// Create a WebpageModel to hold the data
+		// Create a TemplateModel to hold the data
 		var template models.TemplateModel
 
-		// Scan the row data into the WebpageModel
+		// Scan the row data into the TemplateModel
 		err := row.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status)
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -749,14 +768,16 @@ func GetTemplatesById(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return the webpage as JSON
+		// Return the template as JSON
 		c.JSON(http.StatusOK, template)
 
 	}
 }
 
+// GetTemplatesBydid handles GET /api/templates/user/:count/:page - READ
 func GetTemplatesBydid(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userid, _ := c.Get("auth_userId")
 		// Get page and count parameters
 		page := c.Param("page")
 		count := c.Param("count")
@@ -781,7 +802,7 @@ func GetTemplatesBydid(db *sql.DB) gin.HandlerFunc {
 
 		// Get query parameters
 		//userid := c.Query("userid")
-		UserID := 1
+		//UserID := 1
 
 		// Query the database for records based on pagination and userid
 		query := "SELECT * FROM templates WHERE userid = $1 ORDER BY userid LIMIT $2 OFFSET $3"
@@ -796,7 +817,7 @@ func GetTemplatesBydid(db *sql.DB) gin.HandlerFunc {
 		defer stmt.Close()
 
 		// Execute the prepared statement with bound parameters
-		rows, err := stmt.Query(UserID, countInt, offset)
+		rows, err := stmt.Query(userid, countInt, offset)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
@@ -828,6 +849,7 @@ func GetTemplatesBydid(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
+// DownloadById handles GET /api/templat/:id - READ
 func DownloadById(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -837,10 +859,10 @@ func DownloadById(db *sql.DB) gin.HandlerFunc {
 		// Query the database for a single record
 		row := db.QueryRow("SELECT mainfile FROM templates WHERE id = $1", id)
 
-		// Create a WebpageModel to hold the data
+		// Create a TemplateModel to hold the data
 		var template models.TemplateModel
 
-		// Scan the row data into the WebpageModel
+		// Scan the row data into the TemplateModel
 		err := row.Scan(&template.MainFile)
 		if err != nil {
 			fmt.Printf("%s\n", err)
@@ -848,12 +870,84 @@ func DownloadById(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Return the webpage as JSON
+		// Return the templates as JSON
 		c.JSON(http.StatusOK, template)
 
 	}
 }
 
+// GetAcceptedTemplates handles GET /api/templates/acceptstatus/:count/:page - READ
+//func GetAcceptedTemplates(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		// Get page and count parameters
+//		page := c.Param("page")
+//		count := c.Param("count")
+//
+//		// Convert page and count to integers
+//		pageInt, err := strconv.Atoi(page)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page parameter"})
+//			return
+//		}
+//
+//		countInt, err := strconv.Atoi(count)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid count parameter"})
+//			return
+//		}
+//
+//		// Calculate offset
+//		offset := (pageInt - 1) * countInt
+//
+//		// Query the database for records based on pagination and userid
+//		//query := "SELECT * FROM templates WHERE status = 1 ORDER BY status LIMIT $1 OFFSET $2"
+//		query := "SELECT * FROM templates WHERE status = 1 ORDER BY id LIMIT $1 OFFSET $2"
+//
+//		// Prepare the statement
+//		stmt, err := db.Prepare(query)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+//			return
+//		}
+//		defer stmt.Close()
+//
+//		// Execute the prepared statement with bound parameters
+//		rows, err := stmt.Query(countInt, offset)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+//			return
+//		}
+//		defer rows.Close()
+//
+//		// Iterate over the rows and scan them into TemplateModel structs
+//		var templates []models.TemplateModel
+//		for rows.Next() {
+//			var template models.TemplateModel
+//			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status); err != nil {
+//				fmt.Printf("%s\n", err)
+//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+//				return
+//			}
+//			templates = append(templates, template)
+//		}
+//
+//		// Check for errors during iteration
+//		if err := rows.Err(); err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+//			return
+//		}
+//
+//		// Return templates as JSON
+//		c.JSON(http.StatusOK, templates)
+//	}
+//}
+
+// GetAcceptedTemplates handles GET /api/templates/acceptstatus/:count/:page - READ
 func GetAcceptedTemplates(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get page and count parameters
@@ -879,7 +973,13 @@ func GetAcceptedTemplates(db *sql.DB) gin.HandlerFunc {
 		offset := (pageInt - 1) * countInt
 
 		// Query the database for records based on pagination and userid
-		query := "SELECT * FROM templates WHERE status = 1 ORDER BY status LIMIT $1 OFFSET $2"
+		query := `SELECT templates.id, templates.name, templates.description, templates.category, templates.mainfile, templates.thmbnlfile, templates.userid, templates.dmessage, templates.price, templates.submitteddate, templates.status, COALESCE(ROUND(AVG(template_ratings.rating), 2), 0) as average_rating
+    FROM templates
+    LEFT JOIN template_ratings ON templates.id = template_ratings.id
+    WHERE templates.status = 1
+    GROUP BY templates.id
+    ORDER BY templates.id
+    LIMIT $1 OFFSET $2`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
@@ -903,7 +1003,7 @@ func GetAcceptedTemplates(db *sql.DB) gin.HandlerFunc {
 		var templates []models.TemplateModel
 		for rows.Next() {
 			var template models.TemplateModel
-			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status); err != nil {
+			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status, &template.Rating); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -923,204 +1023,150 @@ func GetAcceptedTemplates(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-// AddWebPage handles POST /api/web/webpages - CREATE
-func AddTemplateRatings(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		// get the JSON data
-		var template models.TemplateRatingsModel
-		if err := c.ShouldBindJSON(&template); err != nil {
-			fmt.Printf("%s", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		//Validate the webpage data
-		//if err := validators.ValidateTemp(template, true); err != nil {
-		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		//	return
-		//}
-
-		// query to insert the webpage
-		query := "INSERT INTO template_ratings (id, rating) VALUES ($1, $2)"
-
-		// Prepare the statement
-		stmt, err := db.Prepare(query)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			return
-		}
-
-		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(template.TID, template.Rating)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-			return
-		}
-
-		// Return a success message
-		c.JSON(http.StatusCreated, gin.H{"message": "Rating submitted successfully"})
-
-	}
-}
-
-//	func GetRatingSumAndCount(db *sql.DB) gin.HandlerFunc {
-//		return func(c *gin.Context) {
-//			// get query parameters
-//			key := c.Query("key")
-//			val := c.Query("val")
-//			escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
+//func GetTemplatesByCategory(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		// Get page and count parameters
+//		page := c.Param("page")
+//		count := c.Param("count")
 //
-//			var args []interface{}
-//
-//			// Query the database for sum and count of ratings
-//			query := `SELECT t.id, t.name, t.description, t.category, t.mainfile, t.thmbnlfile, t.userid, t.dmessage, t.price, t.submitteddate, t.status,
-//	          COALESCE(SUM(tr.rating), 0) AS total_ratings, COUNT(tr.rating) AS rating_count
-//	   FROM templates t
-//	   LEFT JOIN template_ratings tr ON t.id = tr.id
-//	   GROUP BY t.id, t.name, t.description, t.category, t.mainfile, t.thmbnlfile, t.userid, t.dmessage, t.price, t.submitteddate, t.status
-//	   `
-//
-//			if val != "" && key != "" {
-//				switch key {
-//				case "id":
-//					query += " WHERE t.id = $1"
-//					args = append(args, val)
-//				case "name":
-//					query += " WHERE t.name LIKE $1"
-//					args = append(args, escapedVal)
-//				case "category":
-//					query += " WHERE t.category LIKE $1"
-//					args = append(args, escapedVal)
-//				}
-//			}
-//
-//			// Prepare the statement
-//			stmt, err := db.Prepare(query)
-//			if err != nil {
-//				fmt.Printf("%s\n", err)
-//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing statement"})
-//				return
-//			}
-//			defer stmt.Close()
-//
-//			// Execute the prepared statement with bound parameters
-//			rows, err := stmt.Query(args...)
-//			if err != nil {
-//				fmt.Printf("%s\n", err)
-//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing query"})
-//				return
-//			}
-//			defer rows.Close()
-//
-//			// Define variables to accumulate the sum and count of ratings
-//			var totalRatings int
-//			var ratingCount int
-//
-//			// Iterate through the rows and accumulate the sum and count of ratings
-//			for rows.Next() {
-//				var id int
-//				var name, description, category, mainfile, thmbnlfile, dmessage string
-//				var price float64
-//				var submitteddate int64
-//				var status int
-//				var userID sql.NullInt64 // Use sql.NullInt64 for the userid column
-//				err := rows.Scan(&id, &name, &description, &category, &mainfile, &thmbnlfile, &userID, &dmessage, &price, &submitteddate, &status, &totalRatings, &ratingCount)
-//				if err != nil {
-//					fmt.Printf("%s\n", err)
-//					c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning row from the database"})
-//					return
-//				}
-//
-//				// Convert sql.NullInt64 to int if it's valid, otherwise assign a default value (e.g., 0)
-//				var userIDValue int
-//				if userID.Valid {
-//					userIDValue = int(userID.Int64)
-//				} else {
-//					userIDValue = 0 // Assign a default value
-//				}
-//
-//				// You can use the retrieved values as needed
-//			}
-//
-//			// Return sum and count of ratings as JSON
-//			c.JSON(http.StatusOK, gin.H{"total_ratings": totalRatings, "rating_count": ratingCount})
+//		// Convert page and count to integers
+//		pageInt, err := strconv.Atoi(page)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page parameter"})
+//			return
 //		}
+//
+//		countInt, err := strconv.Atoi(count)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid count parameter"})
+//			return
+//		}
+//
+//		// Calculate offset
+//		offset := (pageInt - 1) * countInt
+//
+//		// Get categories parameter
+//		categories := c.Query("categories")
+//
+//		// Query the database for records based on pagination and userid
+//		query := `SELECT templates.id, templates.name, templates.description, templates.category, templates.mainfile, templates.thmbnlfile, templates.userid, templates.dmessage, templates.price, templates.submitteddate, templates.status, COALESCE(AVG(template_ratings.rating), 0) as average_rating
+//    FROM templates
+//    LEFT JOIN template_ratings ON templates.id = template_ratings.id
+//    WHERE templates.status = 1`
+//
+//		// If categories are provided, add a WHERE clause to the query
+//		if categories != "" {
+//			query += " AND templates.category IN (" + categories + ")"
+//		}
+//
+//		query += ` GROUP BY templates.id
+//    ORDER BY templates.id
+//    LIMIT $1 OFFSET $2`
+//
+//		// Prepare the statement
+//		stmt, err := db.Prepare(query)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+//			return
+//		}
+//		defer stmt.Close()
+//
+//		// Execute the prepared statement with bound parameters
+//		rows, err := stmt.Query(countInt, offset)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+//			return
+//		}
+//		defer rows.Close()
+//
+//		// Iterate over the rows and scan them into TemplateModel structs
+//		var templates []models.TemplateModel
+//		for rows.Next() {
+//			var template models.TemplateModel
+//			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status, &template.Rating); err != nil {
+//				fmt.Printf("%s\n", err)
+//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+//				return
+//			}
+//			templates = append(templates, template)
+//		}
+//
+//		// Check for errors during iteration
+//		if err := rows.Err(); err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+//			return
+//		}
+//
+//		// Return templates as JSON
+//		c.JSON(http.StatusOK, templates)
 //	}
-func GetbySearchListingPage(db *sql.DB) gin.HandlerFunc {
+//}
+
+// GetTemplatesByCategory handles GET /api/templates/filter/:count/:page/:category - READ
+func GetTemplatesByCategory(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		// get page id parameter
+		// Get page and count parameters
 		page := c.Param("page")
-
-		// get count parameter
 		count := c.Param("count")
+
+		// Get category parameter
+		category := c.Param("category")
 
 		// Convert page and count to integers
 		pageInt, err := strconv.Atoi(page)
 		if err != nil {
-			// Handle error
 			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page parameter"})
 			return
 		}
 
 		countInt, err := strconv.Atoi(count)
 		if err != nil {
-			// Handle error
 			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid count parameter"})
 			return
 		}
 
 		// Calculate offset
 		offset := (pageInt - 1) * countInt
 
-		// get query parameters
-		key := c.Query("key")
-		val := c.Query("val")
-		escapedVal := "%" + strings.ReplaceAll(val, "_", "\\_") + "%"
-
-		var args []interface{}
-
-		// Query the database for records based on pagination
-		query := "SELECT * FROM templates ORDER BY id LIMIT $1 OFFSET $2"
-		args = append(args, countInt, offset)
-
-		if val != "" && key != "" {
-			switch key {
-			case "name":
-				query = "SELECT * FROM templates WHERE name LIKE $3 ORDER BY CASE WHEN name = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal)
-			case "category":
-				query = "SELECT * FROM templates WHERE category LIKE $3 ORDER BY CASE WHEN category = $3 THEN 1 ELSE 2 END, id LIMIT $1 OFFSET $2"
-				args = append(args, escapedVal)
-
-			}
-		}
+		// Query the database for records based on pagination and category
+		query := `SELECT templates.id, templates.name, templates.description, templates.category, templates.mainfile, templates.thmbnlfile, templates.userid, templates.dmessage, templates.price, templates.submitteddate, templates.status, COALESCE(AVG(template_ratings.rating), 0) as average_rating
+     FROM templates
+     LEFT JOIN template_ratings ON templates.id = template_ratings.id
+     WHERE templates.status = 1 AND templates.category = $3
+     GROUP BY templates.id
+     ORDER BY templates.id
+     LIMIT $1 OFFSET $2`
 
 		// Prepare the statement
 		stmt, err := db.Prepare(query)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 			return
 		}
 		defer stmt.Close()
 
 		// Execute the prepared statement with bound parameters
-		rows, err := stmt.Query(args...)
+		rows, err := stmt.Query(countInt, offset, category)
 		if err != nil {
 			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 			return
 		}
-
-		//close the rows when the surrounding function returns(handler function)
 		defer rows.Close()
 
-		// Iterate over the rows and scan them into WebpageModel structs
+		// Iterate over the rows and scan them into TemplateModel structs
 		var templates []models.TemplateModel
-
 		for rows.Next() {
 			var template models.TemplateModel
-			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status); err != nil {
+			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status, &template.Rating); err != nil {
 				fmt.Printf("%s\n", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
 				return
@@ -1128,15 +1174,181 @@ func GetbySearchListingPage(db *sql.DB) gin.HandlerFunc {
 			templates = append(templates, template)
 		}
 
-		//this runs only when loop didn't work
+		// Check for errors during iteration
 		if err := rows.Err(); err != nil {
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
 			return
 		}
 
-		// Return all webpages as JSON
+		// Return templates as JSON
 		c.JSON(http.StatusOK, templates)
+	}
+}
+
+// GetbySearchListingPage handles GET /api/templates/search/:count/:page - READ
+//func SearchTemplatesByCategory(db *sql.DB) gin.HandlerFunc {
+//	return func(c *gin.Context) {
+//		// Get category parameter
+//		category := c.Query("category")
+//
+//		// Query the database for records based on category
+//		query := `SELECT templates.id, templates.name, templates.description, templates.category, templates.mainfile, templates.thmbnlfile, templates.userid, templates.dmessage, templates.price, templates.submitteddate, templates.status, COALESCE(AVG(template_ratings.rating), 0) as average_rating
+//      FROM templates
+//      LEFT JOIN template_ratings ON templates.id = template_ratings.id
+//      WHERE templates.status = 1 AND templates.category = $1
+//      GROUP BY templates.id
+//      ORDER BY templates.id`
+//
+//		// Prepare the statement
+//		stmt, err := db.Prepare(query)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+//			return
+//		}
+//		defer stmt.Close()
+//
+//		// Execute the prepared statement with bound parameters
+//		rows, err := stmt.Query(category)
+//		if err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+//			return
+//		}
+//		defer rows.Close()
+//
+//		// Iterate over the rows and scan them into TemplateModel structs
+//		var templates []models.TemplateModel
+//		for rows.Next() {
+//			var template models.TemplateModel
+//			if err := rows.Scan(&template.Id, &template.Name, &template.Description, &template.Category, &template.MainFile, &template.ThmbnlFile, &template.UserID, &template.DevpDescription, &template.Price, &template.Sdate, &template.Status, &template.Rating); err != nil {
+//				fmt.Printf("%s\n", err)
+//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning rows from the database"})
+//				return
+//			}
+//			templates = append(templates, template)
+//		}
+//
+//		// Check for errors during iteration
+//		if err := rows.Err(); err != nil {
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iterating over rows from the database"})
+//			return
+//		}
+//
+//		// Return templates as JSON
+//		c.JSON(http.StatusOK, templates)
+//	}
+//}
+
+// UploadTemplate handles POST /api/template/upload - CREATE
+func UploadTemplate(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// generate random name to the file with a random string and the current timestamp
+		var tempName = "template_" + utils.GenerateRandomString(10) + "_" + strconv.FormatInt(time.Now().Unix(), 10) + ".zip"
+
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err = utils.UploadTemplate(tempName, file)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Save the file to the server
+		if err := c.SaveUploadedFile(file, "./uploads/"+tempName); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving the file"})
+			return
+		}
+
+		fmt.Printf("File %s uploaded successfully\n", tempName)
+		// Return a success response
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "File uploaded successfully",
+			"fileName": tempName,
+		})
+	}
+}
+
+// UploadThumbImg handles POST /api/template/image/upload - CREATE
+func UploadThumbImg(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// generate random name to the file with a random string and the current timestamp
+		var thumbName = "templateThumb_" + utils.GenerateRandomString(10) + "_" + strconv.FormatInt(time.Now().Unix(), 10) + ".png"
+
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err = utils.UploadThumbImg(thumbName, file)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Save the file to the server
+		if err := c.SaveUploadedFile(file, "./uploads/"+thumbName); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving the file"})
+			return
+		}
+
+		fmt.Printf("File %s uploaded successfully\n", thumbName)
+		// Return a success response
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "File uploaded successfully",
+			"fileName": thumbName,
+		})
+	}
+}
+
+// AddRatings handles POST /api/template/rating - CREATE
+func AddRatings(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		userid, _ := c.Get("auth_userId")
+
+		// get the JSON data
+		var templateR models.TemplateRatingsModel
+		if err := c.ShouldBindJSON(&templateR); err != nil {
+			fmt.Printf("%s", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		//Validate the data
+		//if err := validators.ValidateTemp(template, true); err != nil {
+		//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		//	return
+		//}
+
+		ratedDate := time.Now()
+
+		// query to insert the template
+		query := "INSERT INTO template_ratings (id, user_id, rating, rating_date) VALUES ($1, $2, $3, $4)"
+
+		// Prepare the statement
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Execute the prepared statement with bound parameters
+		_, err = stmt.Exec(templateR.TID, userid, templateR.Rating, ratedDate)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return
+		}
+
+		// Return a success message
+		c.JSON(http.StatusCreated, gin.H{"message": "Rate added successfully"})
 
 	}
 }

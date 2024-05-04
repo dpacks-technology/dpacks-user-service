@@ -19,7 +19,7 @@ jobs:
       - name: Deploy to GCE
         run: |
           gcloud compute ssh instance-20240404-044314 --zone=asia-south1-a --command="
-            sudo git clone https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_ACCESS_TOKEN }}@github.com/dpacks-technology/dpacks-user-service.git ./user
+            sudo git clone --branch release https://github.com/${{ secrets.GH_USERNAME }}:${{ secrets.GH_ACCESS_TOKEN }}@github.com/dpacks-technology/dpacks-user-service.git ./user
             cd user
             sudo git fetch origin && sudo git pull origin main
             echo 'DB_HOST=${{ secrets.DB_HOST }}' | sudo tee .env

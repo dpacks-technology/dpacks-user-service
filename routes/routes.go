@@ -227,7 +227,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 	webContentRoutes.Use(middleware.AuthMiddleware(db))
 	{
 		webContentRoutes.GET("/allSites", controllers.GetAllDpacksSites(db)) // get all webcontent
-		webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
+		webContentRoutes.GET("/webcontents/updated/:limit", controllers.GetUpdatedWebContents(db))
 	}
 
 	BillingRoutes := api.Group("/billing") // web api group

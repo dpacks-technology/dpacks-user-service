@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func UploadTemplate(filename string, file *multipart.FileHeader) error {
+func UploadThumbImg(filename string, file *multipart.FileHeader) error {
 	// Open the uploaded file
 	uploadedFile, err := file.Open()
 	if err != nil {
@@ -25,7 +25,7 @@ func UploadTemplate(filename string, file *multipart.FileHeader) error {
 	}
 
 	// Send multipart request to storage microservice
-	url := os.Getenv("STORAGE_MICROSERVICE_HOST") + "/template" // URL of the storage microservice
+	url := os.Getenv("STORAGE_MICROSERVICE_HOST") + "/template/image" // URL of the storage microservice
 
 	// Create a new form data buffer
 	body := &bytes.Buffer{}

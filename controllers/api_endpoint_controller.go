@@ -117,7 +117,7 @@ func GetUpdatedWebContents(db *sql.DB) gin.HandlerFunc {
 			// Create a map to hold domain name and data
 			domainData := map[string]interface{}{
 				"domain": Domain,
-				"data":   response,
+				"data":   data,
 			}
 
 			// Marshal the map into JSON

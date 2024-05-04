@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -53,11 +54,21 @@ func DeleteSubscriptionByID(db *sql.DB) gin.HandlerFunc {
 		// get id parameter
 		id := c.Param("id")
 
-		// Execute the SQL DELETE statement
+		// Execute the SQL DELETE statement and call the sendEmail function
+
 		_, err := db.Exec("DELETE FROM subscription WHERE project_id = $1", id)
 		if err != nil {
+
 			fmt.Printf("%s\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting row from the database"})
+			return
+		}
+
+		// Send an email to the user
+		err = utils.SendEmail("erandi14908@gmail.com", "Subscription Cancelled", "Your subscription has been cancelled", "small")
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending email"})
 			return
 		}
 
@@ -65,4 +76,5 @@ func DeleteSubscriptionByID(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusNoContent, nil)
 
 	}
+
 }

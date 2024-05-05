@@ -287,4 +287,9 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 		}
 
 	}
+
+	StorageRoutes := api.Group("/storage")
+	{
+		StorageRoutes.GET("/:id", controllers.GetStorageByID(db))
+	}
 }

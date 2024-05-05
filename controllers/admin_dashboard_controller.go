@@ -207,7 +207,7 @@ func GetTotalUsedStorage(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer row.Close()
 
-		var total_sum float64
+		var total_sum int
 		for row.Next() {
 			if err := row.Scan(&total_sum); err != nil {
 				fmt.Printf("%s\n", err)

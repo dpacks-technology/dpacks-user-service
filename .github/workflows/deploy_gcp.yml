@@ -1,38 +1,38 @@
-name: Deploy to GCE
-on:
-  push:
-    branches: [ release ]  # Trigger on pushes to the release branch
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3  # Checkout code from the repository
-
-      - name: Set up Google Cloud authentication
-        uses: google-github-actions/auth@v2  # Install and configure gcloud CLI
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Deploy to GCE
-        run: |
-          gcloud compute ssh instance-20240404-044314 --zone=asia-south1-a --command="
-            sudo git clone -b release https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_ACCESS_TOKEN }}@github.com/dpacks-technology/dpacks-user-service.git ./user
-            cd user
-            sudo git fetch origin && sudo git pull origin release
-            echo 'DB_HOST=${{ secrets.DB_HOST }}' | sudo tee .env
-            echo 'DB_PORT=${{ secrets.DB_PORT }}' | sudo tee -a .env
-            echo 'DB_USER=${{ secrets.DB_USER }}' | sudo tee -a .env
-            echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' | sudo tee -a .env
-            echo 'DB_NAME=${{ secrets.DB_NAME }}' | sudo tee -a .env
-            echo 'EMAIL_API_HOST=${{ secrets.EMAIL_API_HOST }}' | sudo tee -a .env
-            echo 'EMAIL_API_KEY=${{ secrets.EMAIL_API_KEY }}' | sudo tee -a .env
-            echo 'AUTH_API_HOST=${{ secrets.AUTH_API_HOST }}' | sudo tee -a .env
-            echo 'AUTH_API_KEY=${{ secrets.AUTH_API_KEY }}' | sudo tee -a .env
-            echo 'STORAGE_MICROSERVICE_HOST=${{ secrets.STORAGE_MICROSERVICE_HOST }}' | sudo tee -a .env
-            sudo docker stop dpacks-user-service
-            sudo docker rm dpacks-user-service
-            sudo docker build -t dpacks-user-service:latest .
-            sudo docker run -d --name dpacks-user-service -p 4001:4001 dpacks-user-service:latest"
+#name: Deploy to GCE
+#on:
+#  push:
+#    branches: [ release ]  # Trigger on pushes to the release branch
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3  # Checkout code from the repository
+#
+#      - name: Set up Google Cloud authentication
+#        uses: google-github-actions/auth@v2  # Install and configure gcloud CLI
+#        with:
+#          credentials_json: ${{ secrets.GCP_SA_KEY }}
+#          project_id: ${{ secrets.GCP_PROJECT_ID }}
+#
+#      - name: Deploy to GCE
+#        run: |
+#          gcloud compute ssh instance-20240404-044314 --zone=asia-south1-a --command="
+#            sudo git clone -b release https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_ACCESS_TOKEN }}@github.com/dpacks-technology/dpacks-user-service.git ./user
+#            cd user
+#            sudo git fetch origin && sudo git pull origin release
+#            echo 'DB_HOST=${{ secrets.DB_HOST }}' | sudo tee .env
+#            echo 'DB_PORT=${{ secrets.DB_PORT }}' | sudo tee -a .env
+#            echo 'DB_USER=${{ secrets.DB_USER }}' | sudo tee -a .env
+#            echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' | sudo tee -a .env
+#            echo 'DB_NAME=${{ secrets.DB_NAME }}' | sudo tee -a .env
+#            echo 'EMAIL_API_HOST=${{ secrets.EMAIL_API_HOST }}' | sudo tee -a .env
+#            echo 'EMAIL_API_KEY=${{ secrets.EMAIL_API_KEY }}' | sudo tee -a .env
+#            echo 'AUTH_API_HOST=${{ secrets.AUTH_API_HOST }}' | sudo tee -a .env
+#            echo 'AUTH_API_KEY=${{ secrets.AUTH_API_KEY }}' | sudo tee -a .env
+#            echo 'STORAGE_MICROSERVICE_HOST=${{ secrets.STORAGE_MICROSERVICE_HOST }}' | sudo tee -a .env
+#            sudo docker stop dpacks-user-service
+#            sudo docker rm dpacks-user-service
+#            sudo docker build -t dpacks-user-service:latest .
+#            sudo docker run -d --name dpacks-user-service -p 4001:4001 dpacks-user-service:latest"

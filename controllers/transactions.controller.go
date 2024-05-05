@@ -807,7 +807,7 @@ func CheckSubscriptionExists(db *sql.DB) gin.HandlerFunc {
 func Subscribe(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		submitDate := time.Now()
+		//submitDate := time.Now()
 
 		// get the JSON data
 		var subscription models.SubscriptionModel
@@ -835,7 +835,7 @@ func Subscribe(db *sql.DB) gin.HandlerFunc {
 		}
 
 		// Execute the prepared statement with bound parameters
-		_, err = stmt.Exec(subscription.ProjectID, subscription.PlanID, submitDate)
+		_, err = stmt.Exec(subscription.ProjectID, subscription.PlanID)
 		if err != nil {
 			fmt.Printf("%s\n", err)
 			return

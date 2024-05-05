@@ -128,21 +128,22 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 
 		autoRespondRoutes := api.Group("/chat") // auto respond api group
 		{
-			autoRespondRoutes.GET("/auto_respond/:count/:page", controllers.GetAutoResponds(db)) // get all auto responds
-			autoRespondRoutes.POST("/auto_respond", controllers.AddAutoRespond(db))
-			autoRespondRoutes.GET("/auto_respond/id/:id", controllers.GetAutoRespondsById(db))                      // get a webpage by id
-			autoRespondRoutes.GET("/auto_respond/status/:count/:page", controllers.GetAutoRespondsByStatus(db))     // get all webpages by status
-			autoRespondRoutes.GET("/auto_respond/status/count", controllers.GetAutoRespondsByStatusCount(db))       // get all webpages by status
-			autoRespondRoutes.GET("/auto_respond/datetime/:count/:page", controllers.GetAutoRespondsByDatetime(db)) // get all webpages by datetime
-			autoRespondRoutes.GET("/auto_respond/datetime/count", controllers.GetAutoRespondsByDatetimeCount(db))   // get all webpages by datetime
-			autoRespondRoutes.GET("/auto_respond/count", controllers.GetAutoRespondsCount(db))                      // get all webpages count
+			autoRespondRoutes.GET("/auto_respond/:count/:page/:webId", controllers.GetAutoResponds(db)) //Get a list of auto-responses with pagination and webId filtering
+			autoRespondRoutes.POST("/auto_respond/:webId", controllers.AddAutoRespond(db))
+			autoRespondRoutes.GET("/auto_respond/id/:id/:webId", controllers.GetAutoRespondsById(db))                      // get a AutoResponds by id
+			autoRespondRoutes.GET("/auto_respond/status/:count/:page/:webId", controllers.GetAutoRespondsByStatus(db))     // get all AutoResponds by status
+			autoRespondRoutes.GET("/auto_respond/status/count/:webId", controllers.GetAutoRespondsByStatusCount(db))       // get all AutoResponds by status
+			autoRespondRoutes.GET("/auto_respond/datetime/:count/:page/:webId", controllers.GetAutoRespondsByDatetime(db)) // get all AutoResponds by datetime
+			autoRespondRoutes.GET("/auto_respond/datetime/count/:webId", controllers.GetAutoRespondsByDatetimeCount(db))   // get all AutoResponds by datetime
+			autoRespondRoutes.GET("/auto_respond/count/:webId", controllers.GetAutoRespondsCount(db))                      // get all AutoResponds count
 
-			autoRespondRoutes.PUT("/auto_respond/status/:id", controllers.UpdateAutoRespondsStatus(db)) // update webpage status by id
-			autoRespondRoutes.PUT("/auto_respond/:id", controllers.EditAutoResponds(db))                // edit webpage by id
-			autoRespondRoutes.PUT("/auto_respond/status/bulk/:id", controllers.UpdateAutoRespondsStatusBulk(db))
+			autoRespondRoutes.PUT("/auto_respond/status/:id/:webId", controllers.UpdateAutoRespondsStatus(db)) // update AutoResponds status by id
+			autoRespondRoutes.PUT("/auto_respond/:id/:webId", controllers.EditAutoResponds(db))                // edit AutoResponds by id
+			autoRespondRoutes.PUT("/auto_respond/status/bulk/:id/:webId", controllers.UpdateAutoRespondsStatusBulk(db))
 
-			autoRespondRoutes.DELETE("/auto_respond/:id", controllers.DeleteAutoRespondsID(db))            // delete webpage by ID
-			autoRespondRoutes.DELETE("/auto_respond/bulk/:id", controllers.DeleteAutoRespondsByIDBulk(db)) // delete webpage by ID (bulk)
+			autoRespondRoutes.DELETE("/auto_respond/:id/:webId", controllers.DeleteAutoRespondsID(db)) // delete AutoResponds by ID
+			autoRespondRoutes.DELETE("/auto_respond/bulk/:id/:webId", controllers.DeleteAutoRespondsByIDBulk(db))
+			autoRespondRoutes.GET("/auto_respond/get/:webId", controllers.GetAutoRespondsByWebID(db)) // delete AutoResponds by ID (bulk)
 		}
 
 		analyticalAlertsRoutes := api.Group("/analytics") // analytical alerts api group
@@ -189,78 +190,106 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			subscriptionPlansRoutes.GET("/", controllers.GetSubscriptionPlans(db)) // get all subscription plans
 		}
 
-		templateRoutes := api.Group("/template") // template api group
+		templateRoutes := api.Group("/marketplace") // marketplace api group
 		{
-			templateRoutes.GET("/", controllers.GetTemplates(db)) // get all templates
+			templateRoutes.POST("/template", middleware.UserAuthMiddleware(), controllers.AddTemplate(db))                 // add new template
+			templateRoutes.POST("/template/rating", middleware.UserAuthMiddleware(), controllers.AddRatings(db))           // add new template rating
+			templateRoutes.POST("/template/upload", middleware.UserAuthMiddleware(), controllers.UploadTemplate(db))       // upload template
+			templateRoutes.POST("/template/image/upload", middleware.UserAuthMiddleware(), controllers.UploadThumbImg(db)) // upload template thumbnail image
+
+			templateRoutes.GET("/templates/:count/:page", controllers.GetTemplates(db))                                            // get all
+			templateRoutes.GET("/template/:id", controllers.GetTemplatesById(db))                                                  // get by id
+			templateRoutes.GET("/templates/status/:count/:page", controllers.GetTemplatesByStatus(db))                             // get all by status
+			templateRoutes.GET("/templates/status/count", controllers.GetTemplatesByStatusCount(db))                               // get all by status
+			templateRoutes.GET("/templates/datetime/:count/:page", controllers.GetTemplatesByDatetime(db))                         // get all by datetime
+			templateRoutes.GET("/templates/datetime/count", controllers.GetTemplatesByDatetimeCount(db))                           // get all by datetime
+			templateRoutes.GET("/templates/count", controllers.GetTemplatesCount(db))                                              // get all count
+			templateRoutes.GET("/templat/:id", controllers.DownloadById(db))                                                       // download templates by id
+			templateRoutes.GET("/templates/user/:count/:page", middleware.UserAuthMiddleware(), controllers.GetTemplatesBydid(db)) // get all templates by user id
+			templateRoutes.GET("/templates/acceptstatus/:count/:page", controllers.GetAcceptedTemplates(db))                       // get all the accepted templates
+			templateRoutes.GET("/templates/filter/:count/:page/:category", controllers.GetTemplatesByCategory(db))                 // filter function
+
+			templateRoutes.PUT("/templates/status/:id", controllers.UpdateTemplatesStatus(db))                    // update status by id
+			templateRoutes.PUT("/templates/:id", middleware.UserAuthMiddleware(), controllers.EditTemplatesD(db)) // edit template details by id
+			templateRoutes.PUT("/templates/status/bulk/:id", controllers.UpdateTemplatesStatusBulk(db))           // update status by id (bulk)
+
+			templateRoutes.DELETE("/templates/:id", controllers.DeleteTemplateByID(db))          // delete by ID
+			templateRoutes.DELETE("/templates/bulk/:id", controllers.DeleteTemplateByIDBulk(db)) // delete by ID (bulk)
+
 		}
 
 		visitorUserRoutes := api.Group("/visitor_user") // visitor user api group
 		{
 			visitorUserRoutes.GET("/", controllers.GetVisitorUsers(db)) // get all visitor users
 		}
+
+		rateLimitRouts := api.Group("/ratelimit") // visitor user api group
+		{
+
+			rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db))
+
+			rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))
+			rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))
+			rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))
+			rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))
+			rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db))
+			rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))
+			rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))
+
+			rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))
+			rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))
+			rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db))
+
+			rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))
+			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db))
+		}
+
+		webContentRoutes := api.Group("/webcontent")
+		//apply ratelimiter for webcontent subgrooup
+		webContentRoutes.Use(rateLimiter.Limit()) //this also possible
+		webContentRoutes.Use(middleware.AuthMiddleware(db))
+		{
+			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
+			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
+		}
+
+		BillingRoutes := api.Group("/billing") // web api group
+		{
+			BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db)) // add transaction
+
+			BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
+			BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
+			BillingRoutes.GET("/profiles/status/:count/:page", controllers.GetBillingProfileByStatus(db))   // get all transactions by status
+			BillingRoutes.GET("/profiles/status/count", controllers.GetBillingProfileByStatusCount(db))     // get all transactions by status
+			BillingRoutes.GET("/profiles/datetime/:count/:page", controllers.GetBillingProfileDateTime(db)) // get all transactions by datetime
+			BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
+			BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
+			BillingRoutes.GET("/profile/check/:web_id", controllers.CheckBillingProfileExists(db))          // get all transactions total
+
+			BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
+			BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id
+			BillingRoutes.PUT("/profiles/status/bulk/:id", controllers.UpdateBillingProfileStatusBulk(db)) // update transactions status by id (bulk)
+
+			BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
+			BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
+		}
+
+		SubscriptionRoutes := api.Group("/subscription") // subscription api group
+		{
+			SubscriptionRoutes.POST("/", controllers.Subscribe(db)) // add transaction
+
+			SubscriptionRoutes.PUT("/", controllers.UpdateSubscribe(db)) // add transaction
+
+			SubscriptionRoutes.GET("/check/:web_id", controllers.CheckSubscriptionExists(db)) // get all transactions total
+			SubscriptionRoutes.GET("/:id", controllers.GetSubscriptionByID(db))
+
+			SubscriptionRoutes.DELETE("/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
+		}
+
 	}
 
-	rateLimitRouts := api.Group("/ratelimit") // visitor user api group
+	StorageRoutes := api.Group("/storage")
 	{
-
-		rateLimitRouts.POST("/addratelimit", controllers.AddRatelimit(db))
-
-		rateLimitRouts.GET("/ratelimits/:count/:page", controllers.GetRateLimits(db))
-		rateLimitRouts.GET("/ratelimit/:id", controllers.GetRatelimitById(db))
-		rateLimitRouts.GET("/ratelimits/status/:count/:page", controllers.GetRatelimitsByStatus(db))
-		rateLimitRouts.GET("/ratelimits/status/count", controllers.GetRatelimitsByStatusCount(db))
-		rateLimitRouts.GET("/ratelimits/datetime/:count/:page", controllers.GetRatelimitsByDatetime(db))
-		rateLimitRouts.GET("/ratelimits/datetime/count", controllers.GetRatelimitsByDatetimeCount(db))
-		rateLimitRouts.GET("/ratelimits/count", controllers.GetRateLimitCount(db))
-
-		rateLimitRouts.PUT("/ratelimits/status/:id", controllers.UpdateRatelimitStatus(db))
-		rateLimitRouts.PUT("/ratelimits/:id", controllers.EditRatelimit(db))
-		rateLimitRouts.PUT("/ratelimits/status/bulk/:id", controllers.UpdateRatelimitStatusBulk(db))
-
-		rateLimitRouts.DELETE("/ratelimits/:id", controllers.DeleteRatelimitByID(db))
-		rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db))
+		StorageRoutes.GET("/:id", controllers.GetStorageByID(db))
 	}
-
-	webContentRoutes := api.Group("/webcontent")
-	//apply ratelimiter for webcontent subgrooup
-	webContentRoutes.Use(rateLimiter.Limit()) //this also possible
-	webContentRoutes.Use(middleware.AuthMiddleware(db))
-	{
-		webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
-		webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
-	}
-
-	BillingRoutes := api.Group("/billing") // web api group
-	{
-		BillingRoutes.POST("/profiles", controllers.AddBillingProfile(db))                              // add transaction
-		BillingRoutes.GET("/profiles/:count/:page", controllers.GetBillingProfiles(db))                 // get all transactions
-		BillingRoutes.GET("/profile/:id", controllers.GetBillingProfileById(db))                        // get a transactions by id
-		BillingRoutes.GET("/profiles/status/:count/:page", controllers.GetBillingProfileByStatus(db))   // get all transactions by status
-		BillingRoutes.GET("/profiles/status/count", controllers.GetBillingProfileByStatusCount(db))     // get all transactions by status
-		BillingRoutes.GET("/profiles/datetime/:count/:page", controllers.GetBillingProfileDateTime(db)) // get all transactions by datetime
-		BillingRoutes.GET("/profiles/datetime/count", controllers.GetBillingProfileByDatetimeCount(db)) // get all transactions by datetime
-		BillingRoutes.GET("/profiles/count", controllers.GetBillingProfileCount(db))                    // get all transactions count
-		BillingRoutes.GET("/profile/check/:web_id", controllers.CheckBillingProfileExists(db))          // get all transactions total
-
-		BillingRoutes.PUT("/profiles/status/:id", controllers.UpdateBillingProfileStatus(db))          // update transactions status by id
-		BillingRoutes.PUT("/profiles/:id", controllers.EditBillingProfile(db))                         // edit transactions by id
-		BillingRoutes.PUT("/profiles/status/bulk/:id", controllers.UpdateBillingProfileStatusBulk(db)) // update transactions status by id (bulk)
-
-		BillingRoutes.DELETE("/profiles/:id", controllers.DeleteBillingProfileByID(db))          // delete transactions by ID
-		BillingRoutes.DELETE("/profiles/bulk/:id", controllers.DeleteBillingProfileByIDBulk(db)) // delete transactions by ID (bulk)
-
-	}
-
-	SubscriptionRoutes := api.Group("/subscription") // subscription api group
-	{
-		SubscriptionRoutes.POST("/", controllers.Subscribe(db)) // add transaction
-
-		SubscriptionRoutes.PUT("/", controllers.UpdateSubscribe(db)) // add transaction
-
-		SubscriptionRoutes.GET("/check/:web_id", controllers.CheckSubscriptionExists(db)) // get all transactions total
-		SubscriptionRoutes.GET("/:id", controllers.GetSubscriptionByID(db))
-
-		SubscriptionRoutes.DELETE("/:id", controllers.DeleteSubscriptionByID(db)) // delete subscription by ID
-	}
-
 }

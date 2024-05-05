@@ -1265,8 +1265,8 @@ func sendEmail(email string) {
 		//get from env file api key from
 		"api_key": "ctn47m4o8mSwqo8Fgr89gwrQorhoyDrhp9qHgtp9tSgotiSmDyxepGulHoaUPalzxu0zw0peqwdk9tuc",
 		"to":      email,
-		"subject": "Quota Exceeded",
-		"message": "Your quota has been exceeded.",
+		"subject": "User Count Limit Exceeded",
+		"message": "User Count is Reached the Limit to your website",
 		"size":    "sm",
 	}
 

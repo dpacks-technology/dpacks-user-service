@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"bytes"
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -1148,10 +1150,7 @@ func EditAlert(db *sql.DB) gin.HandlerFunc {
 }
 
 func SessionRecord(db *sql.DB) gin.HandlerFunc {
-
 	return func(c *gin.Context) {
-
-		// get the JSON data
 		var session models.SessionRecord
 		if err := c.ShouldBindJSON(&session); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -1159,27 +1158,134 @@ func SessionRecord(db *sql.DB) gin.HandlerFunc {
 		}
 
 		query := "INSERT INTO sessions (sessionid,ipaddress,countrycode,deviceid,source_id,landingpage,web_id) VALUES ($1, $2, $3, $4,$5,$6,$7)"
-
-		// Prepare the statement
 		stmt, err := db.Prepare(query)
 		if err != nil {
-			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		defer stmt.Close()
 
-		// Execute the prepared statement with bound parameters
 		_, err = stmt.Exec(session.SessionID, session.IpAddress, session.CountryCode, session.DeviceId, session.SourceId, session.LandingPage, session.WebId)
 		if err != nil {
-			fmt.Printf("%s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		fmt.Printf("test4")
+		countQuery := "SELECT count FROM session_count WHERE website_id = $1"
+		var count int
+		err = db.QueryRow(countQuery, session.WebId).Scan(&count)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 
-		// Return a success message
-		c.JSON(http.StatusCreated, gin.H{"message": "Added session record Succesfully"})
+		alertQuery := "SELECT id, alert_threshold FROM useralerts WHERE status = 1 and website_id = $1"
+		rows, err := db.Query(alertQuery, session.WebId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer rows.Close()
 
+		var alertsToUpdate []struct {
+			ID             int
+			AlertThreshold int
+		}
+
+		for rows.Next() {
+			var alert struct {
+				ID             int
+				AlertThreshold int
+			}
+			err := rows.Scan(&alert.ID, &alert.AlertThreshold)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			alertsToUpdate = append(alertsToUpdate, alert)
+		}
+
+		fmt.Printf("Count: %d\n", count)
+
+		if err := rows.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		quotaExceeded := false
+		for _, alert := range alertsToUpdate {
+			if count >= alert.AlertThreshold {
+				quotaExceeded = true
+				// Update the status of the user alert record to 0
+				updateQuery := "UPDATE useralerts SET status = 0 WHERE id = $1"
+				_, err := db.Exec(updateQuery, alert.ID)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+			}
+		}
+		fmt.Printf("Quota Exceeded: %t\n", quotaExceeded)
+
+		if quotaExceeded {
+
+			fmt.Printf("hellow test 1")
+			// Retrieve the email of the users whose quota has been exceeded
+			emailQuery := "SELECT email FROM users WHERE id IN (SELECT user_id FROM user_site WHERE site_id = $1)"
+			rows, err := db.Query(emailQuery, session.WebId)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			defer rows.Close()
+
+			// Send email to each user
+			for rows.Next() {
+				var email string
+				err := rows.Scan(&email)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+				// Send email using the provided endpoint
+				sendEmail(email)
+			}
+			fmt.Printf("hellow test 3")
+
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"message": "Added session record successfully"})
 	}
-
 }
 
+func sendEmail(email string) {
+	payload := map[string]interface{}{
+
+		//get from env file api key from
+		"api_key": "ctn47m4o8mSwqo8Fgr89gwrQorhoyDrhp9qHgtp9tSgotiSmDyxepGulHoaUPalzxu0zw0peqwdk9tuc",
+		"to":      email,
+		"subject": "Quota Exceeded",
+		"message": "Your quota has been exceeded.",
+		"size":    "sm",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return
+	}
+
+	fmt.Printf(string(jsonData))
+
+	resp, err := http.Post("http://34.47.130.27:4005/api/email/send", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Failed to send email. Status code: %d\n", resp.StatusCode)
+	}
+}

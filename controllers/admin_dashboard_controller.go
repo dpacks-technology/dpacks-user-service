@@ -138,43 +138,45 @@ func GetTotalMarketplaceUsersCount(db *sql.DB) gin.HandlerFunc {
 
 	}
 }
-func GetSitesStorage(db *sql.DB) gin.HandlerFunc {
-	// Return a handler function
-	return func(c *gin.Context) {
 
-		// Execute the SQL query
-		rows, err := db.Query(`
-            SELECT sites.name AS site_names, 
-            (CAST(sum(size) AS FLOAT8)/1048576) AS size_in_mb
-			FROM data_packets
-			INNER JOIN public.sites ON public.sites.id::text = data_packets.site
-			GROUP BY sites.id;`)
-		if err != nil {
-			// Handle any errors
-			fmt.Printf("%s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
-			return
-		}
-		defer rows.Close()
-
-		// Iterate over the result set
-		var results []gin.H
-		for rows.Next() {
-			var siteNames string
-			var site_sum float64
-			if err := rows.Scan(&siteNames, &site_sum); err != nil {
-				fmt.Printf("%s\n", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning database rows"})
-				return
-			}
-
-			results = append(results, gin.H{"site_name": siteNames, "site_sum": site_sum})
-		}
-
-		// Return the results as JSON
-		c.JSON(http.StatusOK, results)
-	}
-}
+//function to get site specific storage
+//func GetSitesStorage(db *sql.DB) gin.HandlerFunc {
+//	// Return a handler function
+//	return func(c *gin.Context) {
+//
+//		// Execute the SQL query
+//		rows, err := db.Query(`
+//            SELECT sites.name AS site_names,
+//            (CAST(sum(size) AS FLOAT8)/1048576) AS size_in_mb
+//			FROM data_packets
+//			INNER JOIN public.sites ON public.sites.id::text = data_packets.site
+//			GROUP BY sites.id;`)
+//		if err != nil {
+//			// Handle any errors
+//			fmt.Printf("%s\n", err)
+//			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying the database"})
+//			return
+//		}
+//		defer rows.Close()
+//
+//		// Iterate over the result set
+//		var results []gin.H
+//		for rows.Next() {
+//			var siteNames string
+//			var site_sum float64
+//			if err := rows.Scan(&siteNames, &site_sum); err != nil {
+//				fmt.Printf("%s\n", err)
+//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error scanning database rows"})
+//				return
+//			}
+//
+//			results = append(results, gin.H{"site_name": siteNames, "site_sum": site_sum})
+//		}
+//
+//		// Return the results as JSON
+//		c.JSON(http.StatusOK, results)
+//	}
+//}
 
 func GetTotalUsedStorage(db *sql.DB) gin.HandlerFunc {
 	// Return a handler function
@@ -205,7 +207,6 @@ func GetTotalUsedStorage(db *sql.DB) gin.HandlerFunc {
 		//close the rows when the surrounding function returns(handler function)
 		defer row.Close()
 
-		// Iterate over the rows and scan them into KeyPairs structs
 		var total_sum float64
 		for row.Next() {
 			if err := row.Scan(&total_sum); err != nil {
@@ -215,8 +216,7 @@ func GetTotalUsedStorage(db *sql.DB) gin.HandlerFunc {
 			}
 		}
 
-		// Convert total_sum to MB
-		total_sum = total_sum / 1048576
+		//total_sum = total_sum / 1048576
 
 		// Return the example as JSON
 		c.JSON(http.StatusOK, total_sum)

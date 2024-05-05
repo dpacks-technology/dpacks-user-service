@@ -61,7 +61,7 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			adminDashboardRoutes.GET("/websitesTotalCount", controllers.GetTotalWebsitesCount(db))
 			adminDashboardRoutes.GET("/apiSubscribersTotalCount", controllers.GetTotalApiSubscribersCount(db))
 			adminDashboardRoutes.GET("/marketplaceUsersTotalCount", controllers.GetTotalMarketplaceUsersCount(db))
-			//adminDashboardRoutes.GET("/sites/storage", controllers.GetSitesStorage(db)) // get all sites storage
+			adminDashboardRoutes.GET("/sites/storage", controllers.GetSitesStorage(db)) // get all sites storage
 			adminDashboardRoutes.GET("/sites/totalStorage", controllers.GetTotalUsedStorage(db))
 		}
 		adminUserRoutes := api.Group("/admin_user") // admin user api group

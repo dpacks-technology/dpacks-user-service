@@ -973,7 +973,7 @@ func GetAcceptedTemplates(db *sql.DB) gin.HandlerFunc {
 		offset := (pageInt - 1) * countInt
 
 		// Query the database for records based on pagination and userid
-		query := `SELECT templates.id, templates.name, templates.description, templates.category, templates.mainfile, templates.thmbnlfile, templates.userid, templates.dmessage, templates.price, templates.submitteddate, templates.status, COALESCE(ROUND(AVG(template_ratings.rating), 2), 0) as average_rating
+		query := `SELECT templates.id, templates.name, templates.description, templates.category, templates.mainfile, templates.thmbnlfile, templates.userid, templates.dmessage, templates.price, templates.submitteddate, templates.status, COALESCE(ROUND(AVG(template_ratings.rating), 1), 0) as average_rating
     FROM templates
     LEFT JOIN template_ratings ON templates.id = template_ratings.id
     WHERE templates.status = 1

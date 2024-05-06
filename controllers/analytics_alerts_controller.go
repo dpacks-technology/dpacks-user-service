@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/validators"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -157,6 +158,9 @@ func GetVisitorInfoCount(db *sql.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error executing query"})
 			return
 		}
+
+		//backend validation
+		validators.NumberValidation(count)
 
 		// Return the count as JSON
 		c.JSON(http.StatusOK, count)
@@ -731,6 +735,9 @@ func GetAlertsCount(db *sql.DB) gin.HandlerFunc {
 		// Close the statement
 		defer stmt.Close()
 
+		//backend validation
+		validators.NumberValidation(count)
+
 		// Return all webpages as JSON
 		c.JSON(http.StatusOK, count)
 
@@ -934,6 +941,9 @@ func GetAlertsByStatusCount(db *sql.DB) gin.HandlerFunc {
 
 		// Close the statement
 		defer stmt.Close()
+
+		//backend validation
+		validators.NumberValidation(count)
 
 		// Return all webpages as JSON
 		c.JSON(http.StatusOK, count)
@@ -1157,6 +1167,11 @@ func SessionRecord(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
+		//backend validation
+		validators.StringValidation(session.CountryCode)
+		validators.NumberValidation(session.DeviceId)
+		validators.NumberValidation(session.SourceId)
+
 		query := "INSERT INTO sessions (sessionid,ipaddress,countrycode,deviceid,source_id,landingpage,web_id) VALUES ($1, $2, $3, $4,$5,$6,$7)"
 		stmt, err := db.Prepare(query)
 		if err != nil {
@@ -1227,6 +1242,7 @@ func SessionRecord(db *sql.DB) gin.HandlerFunc {
 		}
 		fmt.Printf("Quota Exceeded: %t\n", quotaExceeded)
 
+		//get the user email
 		if quotaExceeded {
 
 			fmt.Printf("hellow test 1")
@@ -1278,7 +1294,7 @@ func sendEmail(email string) {
 
 	fmt.Printf(string(jsonData))
 
-	resp, err := http.Post("http://34.47.130.27:4005/api/email/send", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("https://email.dpacks.net/api/email/send", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return

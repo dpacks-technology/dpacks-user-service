@@ -55,6 +55,15 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			webRoutes.DELETE("/webpages/bulk/:id", controllers.DeleteWebPageByIDBulk(db)) // delete webpage by ID (bulk)
 		}
 
+		adminDashboardRoutes := api.Group("/admin_dashboard") // admin dashboard api group
+		{
+			adminDashboardRoutes.GET("/usersTotalCount", controllers.GetTotalUserCount(db)) // get total user count
+			adminDashboardRoutes.GET("/websitesTotalCount", controllers.GetTotalWebsitesCount(db))
+			adminDashboardRoutes.GET("/apiSubscribersTotalCount", controllers.GetTotalApiSubscribersCount(db))
+			adminDashboardRoutes.GET("/marketplaceUsersTotalCount", controllers.GetTotalMarketplaceUsersCount(db))
+			adminDashboardRoutes.GET("/sites/storage", controllers.GetSitesStorage(db)) // get all sites storage
+			adminDashboardRoutes.GET("/sites/totalStorage", controllers.GetTotalUsedStorage(db))
+		}
 		adminUserRoutes := api.Group("/admin_user") // admin user api group
 		{
 
@@ -244,14 +253,14 @@ func SetupRoutesFunc(r *gin.Engine, db *sql.DB) {
 			rateLimitRouts.DELETE("/ratelimits/bulk/:id", controllers.DeleteRatelimitByIDBulk(db))
 		}
 
-		webContentRoutes := api.Group("/webcontent")
-		//apply ratelimiter for webcontent subgrooup
-		webContentRoutes.Use(rateLimiter.Limit()) //this also possible
-		webContentRoutes.Use(middleware.AuthMiddleware(db))
-		{
-			webContentRoutes.GET("/webcontents", controllers.GetAllWebContents(db)) // get all webcontent
-			webContentRoutes.GET("/webcontents/updated", controllers.GetUpdatedWebContents(db))
-		}
+	webContentRoutes := api.Group("/webcontent")
+	//apply ratelimiter for webcontent subgrooup
+	webContentRoutes.Use(rateLimiter.Limit()) //this also possible
+	webContentRoutes.Use(middleware.AuthMiddleware(db))
+	{
+		webContentRoutes.GET("/allSites", controllers.GetAllDpacksSites(db)) // get all webcontent
+		webContentRoutes.GET("/webcontents/updated/:limit", controllers.GetUpdatedWebContents(db))
+	}
 
 		BillingRoutes := api.Group("/billing") // web api group
 		{

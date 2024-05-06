@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"dpacks-go-services-template/models"
+	"dpacks-go-services-template/utils"
 	"dpacks-go-services-template/validators"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,11 @@ import (
 // AddSite handles POST /api/web/site - CREATE
 func AddSite(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		userEmail, _ := c.Get("auth_username")
+
+		// convert any type userEmail to string
+		userEmailStr := fmt.Sprintf("%v", userEmail)
 
 		// get data
 		// get the JSON data
@@ -62,6 +68,15 @@ func AddSite(db *sql.DB) gin.HandlerFunc {
 			fmt.Printf("%s\n", err)
 			return
 		}
+
+		// send email notification
+		go func() {
+			err := utils.SendEmail(userEmailStr, "New Project Created", "New Project "+site.Name+" created successfully", "small")
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				// Log the error or handle it appropriately
+			}
+		}()
 
 		// return the response
 		c.JSON(http.StatusCreated, gin.H{"message": "Webpage added successfully"})

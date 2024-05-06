@@ -454,11 +454,11 @@ func GetUsersByDatetimeCount(db *sql.DB) gin.HandlerFunc {
 			case "id":
 				query = "SELECT COUNT(*) FROM users WHERE id = $3 AND init_date BETWEEN $1 AND $2"
 				args = append(args, val)
-			case "name":
-				query = "SELECT COUNT(*) FROM users WHERE name LIKE $3 AND init_date BETWEEN $1 AND $2"
+			case "first_name":
+				query = "SELECT COUNT(*) FROM users WHERE first_name LIKE $3 AND init_date BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
-			case "path":
-				query = "SELECT COUNT(*) FROM users WHERE path LIKE $3 AND init_date BETWEEN $1 AND $2"
+			case "last_name":
+				query = "SELECT COUNT(*) FROM users WHERE last_name LIKE $3 AND init_date BETWEEN $1 AND $2"
 				args = append(args, escapedVal)
 			}
 		}

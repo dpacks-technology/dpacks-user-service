@@ -1294,7 +1294,7 @@ func sendEmail(email string) {
 
 	fmt.Printf(string(jsonData))
 
-	resp, err := http.Post("http://34.47.130.27:4005/api/email/send", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post("https://email.dpacks.net/api/email/send", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
